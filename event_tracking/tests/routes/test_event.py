@@ -121,11 +121,11 @@ async def test_get_events_with_timestamp_tag_count(source_event_in_db,
                                                    event_in_db,
                                                    cli):
     frm = parent_event_in_db.start_time.isoformat()
-    to = event_in_db.start_time.isoformat()
+    to = (event_in_db.start_time + timedelta(hours=1)).isoformat()
     resp = await cli.get('/api/v1/event/?frm={0}'
                                        '&to={1}&tag=environment:'
                                        'monitor_candidate&'
-                                       'tag=services:zon-web&'
+                                       'tag=services:tycho&'
                                        'count=1'.format(frm, to))
     event_json = (await resp.json())
     assert event_json["count"] == 1
@@ -237,7 +237,7 @@ async def test_put_event(db, event, cli):
 async def test_put_invalid_event_raises_exception(cli):
     event_json = {'source_id':
                       '{"affected_services":["static-pre-assy"],'
-                      '"phase":"begn","commithash":"cbc010a240e6f',
+                      '"phase":"begn","commithash":"cbc010a240e6f'
                       'a5c9b57ec3a367cd1a6b3b6","hst":"host","comm'
                       'itter_email":"user@example.com","author":"example@zill'
                       'ow.com","bugnum":"None","action":"begin","env":"hd1'
@@ -253,7 +253,7 @@ async def test_put_invalid_event_raises_exception(cli):
                       '"concrete_hash":"cbc010a240e6fa5c9b57ec3a'
                       'cf58367cd1a6b3b6","affected_hosts":["host3-'
                       '001.localhost"],"logname":"deploy-user","autho'
-                      'r_emails":["user@example.com"]}'
+                      'r_emails":["user@example.com"]}',
                       'hostname': 'host.localhost'}
 
     resp = await cli.put('/api/v1/event/',
@@ -293,7 +293,7 @@ async def test_post_invalid_event_raises_bad_reqeuest(event, cli):
 
 
 async def test_put_invalid_event_raises_exception_with_to_native(cli):
-    with patch("event_tracking_model.event.Event.to_native", return_value = None) as mock_to_native:
+    with patch("event_tracking.models.event.Event.to_native", return_value = None) as mock_to_native:
         resp = await cli.put('/api/v1/event/',
                                 headers={"content-type": "application/json"},
                                 data=json.dumps({"event": {}})
@@ -303,7 +303,7 @@ async def test_put_invalid_event_raises_exception_with_to_native(cli):
 
 
 async def test_post_invalid_event_raises_bad_reqeuest_with_to_native(event, cli):
-    with patch("event_tracking_model.event.Event.to_native", return_value = None) as mock_to_native:
+    with patch("event_tracking.models.event.Event.to_native", return_value = None) as mock_to_native:
         resp = await cli.post('/api/v1/event/',
                                 headers={"content-type": "application/json"},
                                 data=json.dumps({"operation": "merge",

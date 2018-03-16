@@ -3,10 +3,10 @@
   "name": "tycho-ui",
   "description": "ETS is a loosely coupled graph service, able to illustrate chains of events when all events in the chain properly exist.",
   "version": "1.0.0",
-  "license": "ISC",
+  "license": "Apache 2.0",
   "main": "ets.js",
   "repository": {
-    "type": "git",
+    "type": "git"
   },
   "dependencies": {
     "d3": "^3",

@@ -1,4 +1,5 @@
 import datetime
+import os
 import pytest
 import socket
 from unittest import mock
@@ -15,16 +16,14 @@ from event_tracking.models.event import Event as ModelEvent
 
 global_source_id = "222f1f77bcf86cd799439011"
 
-DB_NAME = "ets-unit-tests-{hostname}".format(
-    hostname=socket.gethostname())
+DB_NAME = "tycho-tests-{}".format(os.getpid())
 
 DB_CONFIG = Mongo({
         "db_name": DB_NAME,
         # TODO: add hosts
         "hosts": ",".join(["localhost:27017"]),
-        "replicaset": "rs0",
         "max_pool_size": 10,
-        "write_concern": 3
+        "write_concern": 1
 })
 
 

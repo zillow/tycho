@@ -255,8 +255,8 @@ async def test_get_events_with_only_one_timestamp(app, source_event_in_db,
     async for doc in docs:
         result.append(doc)
     assert len(result) == 2
-    assert parent_event_in_db.to_primitive() == result[0].to_primitive()
-    assert source_event_in_db.to_primitive() == result[1].to_primitive()
+    assert source_event_in_db.to_primitive() == result[0].to_primitive()
+    assert parent_event_in_db.to_primitive() == result[1].to_primitive()
 
     to = event_in_db.start_time + timedelta(seconds=1)
     docs = await app["db"].event.find(to=to)

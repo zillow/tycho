@@ -20,6 +20,6 @@ async def create_app(loop, config, **kwargs):
     return app
 
 
-def init_app(app, config):
+async def init_app(app, config):
     if "db" not in app:
         app["db"] = init_db(config.mongo)  # pragma: no cover

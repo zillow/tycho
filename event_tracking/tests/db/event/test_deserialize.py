@@ -76,7 +76,7 @@ def test_deserialize_db_event_tags_donot_exists(eventdb):
         "start_time": eventdb["time"][0],
         "end_time": eventdb["time"][1],
         "detail_urls": {
-            "zbrt": "http://zbrt",
+            "jira": "http://jira",
             "graphite": "http://graphite"},
         "description": "This is a trigger_deploy event.",
     }
