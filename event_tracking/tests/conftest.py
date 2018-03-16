@@ -11,10 +11,9 @@ from event_tracking.models.config import Config
 from event_tracking.models.config import Mongo
 from event_tracking.models.eventdb import EventDB as ModelEventDB
 from event_tracking.routes.event import Event
-from event_tracking_model.event import Event as ModelEvent
+from event_tracking.models.event import Event as ModelEvent
 
 global_source_id = "222f1f77bcf86cd799439011"
-pytest_plugins = 'aiohttp.pytest_plugin'
 
 DB_NAME = "ets-unit-tests-{hostname}".format(
     hostname=socket.gethostname())
@@ -22,7 +21,7 @@ DB_NAME = "ets-unit-tests-{hostname}".format(
 DB_CONFIG = Mongo({
         "db_name": DB_NAME,
         # TODO: add hosts
-        "hosts": ",".join([])
+        "hosts": ",".join(["localhost:27017"]),
         "replicaset": "rs0",
         "max_pool_size": 10,
         "write_concern": 3

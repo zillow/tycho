@@ -99,3 +99,9 @@ ENV/
 
 # mypy
 .mypy_cache/
+include
+bin
+VERSION
+.uranium
+.pytest_cache
+pip-selfcheck.json

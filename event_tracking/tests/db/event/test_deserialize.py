@@ -3,7 +3,7 @@ import pytest
 
 from event_tracking.db.event.deserialize import (
     _extract_tags, _extract_time, deserialize_db_event)
-from event_tracking_model.event import Event
+from event_tracking.models.event import Event
 
 
 @pytest.mark.parametrize(["input", "output"], [

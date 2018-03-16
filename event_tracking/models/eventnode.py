@@ -1,4 +1,4 @@
-from event_tracking_model.event import Event
+from .event import Event
 from schematics.models import Model
 from schematics.types import ListType
 from schematics.types.compound import ModelType

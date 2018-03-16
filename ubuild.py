@@ -1,7 +1,7 @@
 from uranium import current_build
 
 current_build.config.set_defaults({
-    "module": "tycho"
+    "module": "event_tracking"
 })
 
 current_build.packages.install(".", develop=True)

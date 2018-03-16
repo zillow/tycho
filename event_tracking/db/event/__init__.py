@@ -1,7 +1,7 @@
 import pymongo
-from event_tracking.db.utils import async_generator
-from event_tracking.models.eventnode import EventNode
-from event_tracking_model.event import Event as ModelEvent
+from ..utils import async_generator
+from ...models.eventnode import EventNode
+from ...models.event import Event as ModelEvent
 from aiohttp_transmute import APIException
 from aiohttp.web import HTTPNotFound
 import queue as q

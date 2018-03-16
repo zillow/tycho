@@ -1,7 +1,7 @@
 import pytest
 from aiohttp.web import HTTPNotFound
 from datetime import datetime, timedelta
-from event_tracking_model.event import Event
+from event_tracking.models.event import Event
 
 
 async def test_save_data(app, event):

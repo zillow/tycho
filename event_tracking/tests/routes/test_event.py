@@ -1,11 +1,11 @@
 from datetime import datetime, timedelta
 import json
-from mock import patch
+from unittest.mock import patch
 import pytest
 
 from aiohttp.web import HTTPNotFound
 from event_tracking.routes.event import _merge, _update
-from event_tracking_model.event import Event
+from event_tracking.models.event import Event
 from schematics.exceptions import DataError
 
 
@@ -253,8 +253,8 @@ async def test_put_invalid_event_raises_exception(cli):
                       '"concrete_hash":"cbc010a240e6fa5c9b57ec3a'
                       'cf58367cd1a6b3b6","affected_hosts":["host3-'
                       '001.localhost"],"logname":"deploy-user","autho'
-                      'r_emails":["user@example.com"]}',
-                  'hostname': 'host.localhost'}
+                      'r_emails":["user@example.com"]}'
+                      'hostname': 'host.localhost'}
 
     resp = await cli.put('/api/v1/event/',
                                 headers={"content-type": "application/json"},

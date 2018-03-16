@@ -1,7 +1,7 @@
 from schematics.models import Model
 from schematics.types import StringType, DictType, UTCDateTimeType
 from schematics.types.compound import ListType
-from event_tracking_model.utc_datetimetype_ignore_microseconds import UTCDateTimeTypeIgnoreMicroseconds  # noqa
+from .types import UTCDateTimeTypeIgnoreMicroseconds
 
 
 class EventDB(Model):

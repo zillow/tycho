@@ -6,9 +6,9 @@ from aiohttp import web
 from aiohttp.web import HTTPNotFound
 from aiohttp_transmute import (APIException, add_route, route)
 from datetime import datetime
-from event_tracking.models.eventnode import EventNode
-from event_tracking.models.events_with_count import EventListWithCount
-from event_tracking_model.event import Event
+from ..models.eventnode import EventNode
+from ..models.events_with_count import EventListWithCount
+from ..models.event import Event
 from schematics.types import BooleanType, DateTimeType
 
 from ..templates import get_template

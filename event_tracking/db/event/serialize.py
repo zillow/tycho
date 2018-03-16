@@ -1,5 +1,5 @@
 from datetime import datetime
-from event_tracking_model.event import Event
+from event_tracking.models.event import Event
 from typing import Dict, List
 
 
