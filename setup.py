@@ -1,12 +1,19 @@
 import os
+import sys
 from setuptools import setup, find_packages
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 
+is_release = False
+if "--release" in sys.argv:
+    is_release = True
+    sys.argv.remove("--release")
+
 
 setup(name='tycho',
       setup_requires=["vcver", "setuptools-parcels"],
-      vcver={"path": BASE},
+      vcver={"is_release": is_release,
+             "path": BASE},
       description='',
       author="zillow-orbital",
       author_email="",
@@ -24,5 +31,6 @@ setup(name='tycho',
           'console_scripts': [
               'create_indexes=event_tracking.scripts.create_indexes:main'
           ]
-      }
+      },
+      include_package_data=True,
 )
