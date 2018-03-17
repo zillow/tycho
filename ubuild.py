@@ -29,3 +29,7 @@ def stop_db(build):
 
 build.tasks.prepend("test", "start_db")
 build.tasks.append("test", "stop_db")
+
+def prep_app(build):
+    """ prep to be run as an app. """
+    build.packages.install("gunicorn")

@@ -18,7 +18,6 @@ setup(name='tycho',
           'aiohttp-transmute',
           'motor',
           'pymongo',
-          'pyzmq',
           'orbital-core'
       ],
       entry_points={
