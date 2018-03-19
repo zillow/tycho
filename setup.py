@@ -33,4 +33,5 @@ setup(name='tycho',
           ]
       },
       include_package_data=True,
+      parcels={}
 )
