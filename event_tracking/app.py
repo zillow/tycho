@@ -5,7 +5,7 @@ from .routes import add_routes
 from .db import init_db as init_db
 from orbital_core import bootstrap_app
 
-APP_ROOT = os.path.dirname(os.path.dirname(__file__))
+APP_ROOT = os.path.dirname(__file__)
 
 
 async def create_app(loop, config, **kwargs):

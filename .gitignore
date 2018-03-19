@@ -108,3 +108,4 @@ pip-selfcheck.json
 node_modules
 package-lock.json
 event_tracking/static
+event_tracking/docs

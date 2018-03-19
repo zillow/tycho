@@ -2,3 +2,4 @@ include VERSION
 include README.rst
 recursive-include event_tracking/templates/*
 recursive-include event_tracking/static/*
+recursive-include event_tracking/docs/*
