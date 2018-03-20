@@ -36,33 +36,43 @@ An example event looks like this:
         "end_time": "12/05/16:10:26:00",
         // a string with the description.
         "description": "This is a Concrete event",
-        // an object containing references that be queried for more information
-        // about the event.
+        // Links to other systems and services can added to this object.
+        // it should contain a single key representing the service or system
+        // with more information, and a value with the url to that system.
+        //
         // For a large amount of details, it's recommended to store that information
         // in an external service, and use ETS to query for events that point to that
         // information instead.
         "detail_urls": {"graphite": "http//graphite"}
-        // tags are an object of <string, array> pairs,
+        // tags are an object of <string, array<string>> pairs,
         // signifying all tags that this event matches.
-        // this is useful for querying purposes.
+        // this is used for querying.
         //
-        // tags have no imposed structure, but recommended keys are outlined
+        // tags have no imposed structure, but some common examples are listed
         // below.
         "tags": {
-            # this should be the source of the event itself, to figure out where things are coming from
+            # this should be the service or system emitting these events.
+            # it helps when trying to find all the events that service recently
+            # emitted.
             "source": ["concrete"],
-            # this is the type of action. multiple sources can perform the same action (e.g. zeploy / shipit for deploy)
+            # this is the type of action. multiple sources can perform the same action.
+            # it's important to not tie this to a particular implementation, as
+            # technology changes rapidly and the type provides a way to decouple that.
             "type": ["commit"],
-            # a list of authors who are responsible for the event (should be the e-mail)
+            # a list of authors who are responsible for the event.
+            # e-mail is a namespace that guarantees uniqueness, and works well
+            # alternatively, some other unique key representing the team would
+            # work well.
             "author": ["yusuket@example.com", "saroj@example.com"],
-            # the list of services this event affects. best practice: only attach this to the event that is actually affecting the service, not
+            # the list of services this event affects.
+            # best practice: only attach this to the event that is actually affecting the service, not
             # the event that will CAUSE an affecting event.
             "service": ["zon-web"],
-            # pending, fail, success
+            # pending, fail, success. The event can be updated after the fact,
+            # so this can represent some transient state as well.
+            # conversely, one could an event after a state change as a separate event.
             "status": ["success"],
-            # a concrete hash, if one exists
-            "concrete_hash": ["3443333"],
-            # the bug number, if it's relevant
+            # a bug or ticket number. Having a ticket with work-in-action helps with additional context.
             "bug_number": ["MON-1234"],
         }
     }
