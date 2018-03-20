@@ -1,18 +1,10 @@
-# event-tracking-service
+# Tycho
 
-ETS is a loosely coupled graph service, able to illustrate
-chains of events when all events in the chain properly exist.
+Tycho is a change management service, with the ability to store
+operational events and query them via tags or within time ranges.
 
-It can also be used to see the impact of an automation event.
+Tycho provides the ability to describe relationships between events
+as well, by specifying an ID of a parent event from which the child
+event was spawned.
 
-# bootstrap
-
-    ./uranium
-
-# running the service
-
-    ./uranium dev
-
-# running tests
-
-    ./uranium test
+Tycho is a service from the orbital group at Zillow.
