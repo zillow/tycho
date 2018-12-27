@@ -51,7 +51,7 @@ gulp.task('bundle-js', ['sync-js'], function() {
                 })
             ],
         }, webpack))
-        .pipe(gulp.dest('event_tracking/static/js'));
+        .pipe(gulp.dest('tycho/static/js'));
 });
 
 gulp.task('bundle-js-dev', ['sync-js'], function() {
@@ -61,7 +61,7 @@ gulp.task('bundle-js-dev', ['sync-js'], function() {
                 filename: "ets.js"
             }
         }))
-        .pipe(gulp.dest('event_tracking/static/js'));
+        .pipe(gulp.dest('tycho/static/js'));
 });
 
 gulp.task('uglify-js', ['bundle-js'], function () {
@@ -82,7 +82,7 @@ gulp.task('compile-less', function () {
         .pipe(less({
             pathConfig: [ path.join(__dirname, 'target') ]
         }))
-        .pipe(gulp.dest('event_tracking/static/css'));
+        .pipe(gulp.dest('tycho/static/css'));
 });
 
 gulp.task('build', [

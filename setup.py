@@ -29,7 +29,7 @@ setup(name='tycho',
       ],
       entry_points={
           'console_scripts': [
-              'create_indexes=event_tracking.scripts.create_indexes:main'
+              'create_indexes=tycho.scripts.create_indexes:main'
           ]
       },
       include_package_data=True,

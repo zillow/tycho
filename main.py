@@ -1,6 +1,6 @@
 import asyncio
-from event_tracking.app import create_app
-from event_tracking.models.config import Config
+from tycho.app import create_app
+from tycho.models.config import Config
 
 config = Config({
     "mongo": {

@@ -1,5 +1,5 @@
 include VERSION
 include README.rst
-recursive-include event_tracking/templates/*
-recursive-include event_tracking/static/*
-recursive-include event_tracking/docs/*
+recursive-include tycho/templates/*
+recursive-include tycho/static/*
+recursive-include tycho/docs/*

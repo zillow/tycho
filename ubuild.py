@@ -2,7 +2,7 @@ import subprocess
 from uranium import current_build
 
 current_build.config.set_defaults({
-    "module": "event_tracking"
+    "module": "tycho"
 })
 
 current_build.packages.install("orbital-core")

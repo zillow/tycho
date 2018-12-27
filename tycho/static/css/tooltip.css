@@ -1,0 +1,36 @@
+#ets-tip {
+  line-height: 2;
+  font-weight: bold;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.95);
+  color: #333333;
+  border-radius: 5px;
+  font: 14px sans-serif;
+  pointer-events: none;
+  border: 1px solid #ccc;
+  transition: opacity 0.2s ease-in-out;
+  min-height: 250px;
+  -webkit-box-shadow: 4px 4px 8px 0px rgba(102, 102, 102, 0.5);
+  -moz-box-shadow: 4px 4px 8px 0px rgba(102, 102, 102, 0.5);
+  box-shadow: 4px 4px 8px 0px rgba(102, 102, 102, 0.5);
+}
+#ets-tip dl {
+  margin: 0;
+  padding: 0;
+}
+#ets-tip dd {
+  display: inline;
+  margin: 0;
+}
+#ets-tip dd:after {
+  display: block;
+  margin: 4px 0;
+  content: '';
+}
+#ets-tip dt {
+  display: inline-block;
+  text-align: right;
+  min-width: 120px;
+  margin: 0 10px 0 0;
+  font-weight: 600;
+}

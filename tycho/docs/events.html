@@ -1,0 +1,283 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Events &mdash; event-tracking-service 0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Welcome to event-tracking-service’s documentation!" href="index.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> event-tracking-service
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Events</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#event-format">Event Format</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">event-tracking-service</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Events</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/events.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="events">
+<h1>Events<a class="headerlink" href="#events" title="Permalink to this headline">¶</a></h1>
+<p>Events are the main data that ETS contains, and can be created and
+updated.</p>
+<p>An event should represent a single manual or automated event, over a
+particular period in time.</p>
+<p>Events can be updated with brand new data, or merged with existing
+data. See the <a class="reference external" href="/api">API</a> for more information.</p>
+<div class="section" id="event-format">
+<h2>Event Format<a class="headerlink" href="#event-format" title="Permalink to this headline">¶</a></h2>
+<p>An example event looks like this:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span>{
+     // a unique ID for your event. This is user-generated,
+     // and can include semantic information. maximum 100 characters.
+     // in the case where the id is irrelevant, it&#39;s recommended to use
+     // a uuid4 id, or not pass one at all.
+     &quot;id&quot;: &quot;333f1f77bcf86cd799439011&quot;
+     // if your event was caused by another event being tracked,
+     // you may reference it here.
+     &quot;parent_id&quot;: &quot;111f1f77bcf86cd799439011&quot;,
+     // all events require a start time and an event time.
+     // in the case where is one is not passed, the current time is used.
+     // In the case where a single timestamp is passed, it is considered
+     //     both the start and end time.
+     &quot;start_time&quot;: &quot;12/05/16:10:25:00&quot;,
+     &quot;end_time&quot;: &quot;12/05/16:10:26:00&quot;,
+     // a string with the description.
+     &quot;description&quot;: &quot;This is a Concrete event&quot;,
+     // Links to other systems and services can added to this object.
+     // it should contain a single key representing the service or system
+     // with more information, and a value with the url to that system.
+     //
+     // For a large amount of details, it&#39;s recommended to store that information
+     // in an external service, and use ETS to query for events that point to that
+     // information instead.
+     &quot;detail_urls&quot;: {&quot;graphite&quot;: &quot;http//graphite&quot;}
+     // tags are an object of &lt;string, array&lt;string&gt;&gt; pairs,
+     // signifying all tags that this event matches.
+     // this is used for querying.
+     //
+     // tags have no imposed structure, but some common examples are listed
+     // below.
+     &quot;tags&quot;: {
+         # this should be the service or system emitting these events.
+         # it helps when trying to find all the events that service recently
+         # emitted.
+         &quot;source&quot;: [&quot;concrete&quot;],
+         # this is the type of action. multiple sources can perform the same action.
+         # it&#39;s important to not tie this to a particular implementation, as
+         # technology changes rapidly and the type provides a way to decouple that.
+         &quot;type&quot;: [&quot;commit&quot;],
+         # a list of authors who are responsible for the event.
+         # e-mail is a namespace that guarantees uniqueness, and works well
+         # alternatively, some other unique key representing the team would
+         # work well.
+         &quot;author&quot;: [&quot;yusuket@example.com&quot;, &quot;saroj@example.com&quot;],
+         # the list of services this event affects.
+         # best practice: only attach this to the event that is actually affecting the service, not
+         # the event that will CAUSE an affecting event.
+         &quot;service&quot;: [&quot;tycho&quot;],
+         # pending, fail, success. The event can be updated after the fact,
+         # so this can represent some transient state as well.
+         # conversely, one could an event after a state change as a separate event.
+         &quot;status&quot;: [&quot;success&quot;],
+         # a bug or ticket number. Having a ticket with work-in-action helps with additional context.
+         &quot;bug_number&quot;: [&quot;MON-1234&quot;],
+     }
+ }
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="index.html" class="btn btn-neutral" title="Welcome to event-tracking-service’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, orbital@example.com
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+
+  
+
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,35 @@
+body,
+html {
+  height: 100%;
+}
+#ets-graph {
+  height: 100%;
+  margin: 0 5%;
+  min-width: 400px;
+  box-sizing: border-box;
+  top: 0;
+}
+.node {
+  cursor: pointer;
+}
+.node circle {
+  fill: #fff;
+  stroke: #333;
+  stroke-width: 5px;
+}
+.node circle.fail-event {
+  fill: #c00c00;
+  stroke: #c00c00;
+}
+.node circle.collapsed {
+  fill: #999;
+  stroke: #333;
+}
+.node text {
+  font: 14px sans-serif;
+}
+.link {
+  fill: none;
+  stroke: #333;
+  stroke-width: 5px;
+}

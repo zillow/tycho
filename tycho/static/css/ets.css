@@ -1,0 +1,71 @@
+body,
+html {
+  height: 100%;
+}
+#ets-graph {
+  height: 100%;
+  margin: 0 5%;
+  min-width: 400px;
+  box-sizing: border-box;
+  top: 0;
+}
+.node {
+  cursor: pointer;
+}
+.node circle {
+  fill: #fff;
+  stroke: #333;
+  stroke-width: 5px;
+}
+.node circle.fail-event {
+  fill: #c00c00;
+  stroke: #c00c00;
+}
+.node circle.collapsed {
+  fill: #999;
+  stroke: #333;
+}
+.node text {
+  font: 14px sans-serif;
+}
+.link {
+  fill: none;
+  stroke: #333;
+  stroke-width: 5px;
+}
+#ets-tip {
+  line-height: 2;
+  font-weight: bold;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.95);
+  color: #333333;
+  border-radius: 5px;
+  font: 14px sans-serif;
+  pointer-events: none;
+  border: 1px solid #ccc;
+  transition: opacity 0.2s ease-in-out;
+  min-height: 250px;
+  -webkit-box-shadow: 4px 4px 8px 0px rgba(102, 102, 102, 0.5);
+  -moz-box-shadow: 4px 4px 8px 0px rgba(102, 102, 102, 0.5);
+  box-shadow: 4px 4px 8px 0px rgba(102, 102, 102, 0.5);
+}
+#ets-tip dl {
+  margin: 0;
+  padding: 0;
+}
+#ets-tip dd {
+  display: inline;
+  margin: 0;
+}
+#ets-tip dd:after {
+  display: block;
+  margin: 4px 0;
+  content: '';
+}
+#ets-tip dt {
+  display: inline-block;
+  text-align: right;
+  min-width: 120px;
+  margin: 0 10px 0 0;
+  font-weight: 600;
+}
