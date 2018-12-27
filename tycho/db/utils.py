@@ -11,7 +11,7 @@ class async_generator:
         self.cursor = cursor
         self.map = map
 
-    async def __aiter__(self):
+    def __aiter__(self):
         return self
 
     async def __anext__(self):
