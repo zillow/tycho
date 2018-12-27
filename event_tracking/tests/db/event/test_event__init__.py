@@ -1,13 +1,16 @@
 import pytest
+import attr
 from aiohttp.web import HTTPNotFound
 from datetime import datetime, timedelta
 from event_tracking.models.event import Event
+from copy import deepcopy
+from event_tracking.db.event import MAX_RECURSIVE_DEPTH
 
 
 async def test_save_data(app, event):
     await app["db"].event.save(event)
     result = await app["db"].event.find_one()
-    assert result.to_native() == event.to_native()
+    assert attr.asdict(result) == attr.asdict(event)
 
 
 async def test_find_one_data_exists(app, event):
@@ -18,15 +21,14 @@ async def test_find_one_data_exists(app, event):
 
 async def test_find_one_data_not_exists(app):
     result = await app["db"].event.find_one()
-    assert result == Event({"id": result.id,
-                            "start_time": result.start_time,
-                            "end_time": result.end_time})
+    assert result == Event(**{"id": result.id,
+                              "start_time": result.start_time,
+                              "end_time": result.end_time})
 
 
 async def test_find_by_id_data_exist(app, event):
     await app["db"].event.save(event)
-    id = event["id"]
-    result = await app["db"].event.find_by_id(id)
+    result = await app["db"].event.find_by_id(event.id)
     assert result == event
 
 
@@ -41,35 +43,66 @@ async def test_trace_stops_at_nonexistent_parent(app, event):
     than raise an exception.
     """
     await app["db"].event.save(event)
-    result = await app["db"].event.trace(event["id"])
+    result = await app["db"].event.trace(event.id)
     assert len(result) == 1
+
+
+async def test_event_trace_with_empty_parent_id(app, event):
+    event_copy = deepcopy(event)
+    event_copy.parent_id = "dummy_parent_id"
+
+    child_event_copy = deepcopy(event_copy)
+    child_event_copy.id = "dummy_parent_id"
+    child_event_copy.parent_id = ""
+    await app["db"].event.save(event_copy)
+    await app["db"].event.save(child_event_copy)
+
+    result = await app["db"].event.trace(event_copy.id)
+    assert len(result) == 2
+    assert result[0].id == event_copy.id
+    assert result[1].id == child_event_copy.id
+
+
+async def test_event_trace_with_max_recursive_depth(app, event):
+    i = 0
+    curr_id = event.id
+    parent_id = curr_id + str(i)
+    event_copy = deepcopy(event)
+    while i < MAX_RECURSIVE_DEPTH + 10:
+        event_copy.id = curr_id
+        event_copy.parent_id = parent_id
+        await app["db"].event.save(event_copy)
+        i += 1
+        curr_id = parent_id
+        parent_id = event.id + str(i)
+
+    result = await app["db"].event.trace(event.id)
+    assert len(result) == MAX_RECURSIVE_DEPTH
 
 
 async def test_update_by_id(app, event):
     await app["db"].event.save(event)
-    id = event["id"]
-    prev_event = await app["db"].event.find_by_id(id)
-    assert prev_event["tags"]["status"] == ["success"]
-    prev_event["tags"]["status"] = ["Fail"]
-    await app["db"].event.update_by_id(id, prev_event)
-    result = await app["db"].event.find_by_id(id)
-    assert result["tags"]["status"] == ["Fail"]
+    prev_event = await app["db"].event.find_by_id(event.id)
+    assert prev_event.tags["status"] == ["success"]
+    prev_event.tags["status"] = ["Fail"]
+    await app["db"].event.update_by_id(event.id, prev_event)
+    result = await app["db"].event.find_by_id(event.id)
+    assert result.tags["status"] == ["Fail"]
 
 
 async def test_update_by_id_on_nothing(app, event):
-    id = event["id"]
-    await app["db"].event.update_by_id(id, event)
+    await app["db"].event.update_by_id(event.id, event)
     with pytest.raises(HTTPNotFound):
-        result = await app["db"].event.find_by_id(id)
+        result = await app["db"].event.find_by_id(event.id)
 
 
 async def test_find_by_parent_id(app, event):
     await app["db"].event.save(event)
-    id = event["parent_id"]
+    id = event.parent_id
     result = []
     async for doc in await app["db"].event.find_by_parent_id(id):
         result.append(doc)
-    assert event.to_native() == result[0].to_native()
+    assert attr.asdict(event) == attr.asdict(result[0])
 
 
 async def test_find_by_env_and_service(app, source_event_in_db):
@@ -81,7 +114,7 @@ async def test_find_by_env_and_service(app, source_event_in_db):
     docs = await app["db"].event.find(tags=tags)
     async for doc in docs:
         result.append(doc)
-    assert result[0].to_primitive() == source_event_in_db.to_primitive()
+    assert attr.asdict(result[0]) == attr.asdict(source_event_in_db)
 
 
 async def test_find_by_env_and_service_no_event_returns_empty_list(
@@ -105,13 +138,14 @@ async def test_get_most_recent_events(app, source_event_in_db,
     result = []
     async for doc in docs:
         result.append(doc)
-    event_list = [source_event_in_db,
-                  child_event_of_source_in_db,
-                  parent_event_in_db,
-                  event_in_db
-                  ]
+    event_list = [
+        child_event_of_source_in_db,
+        source_event_in_db,
+        parent_event_in_db,
+        event_in_db
+    ]
     for i in range(len(event_list)):
-        assert event_list[i].to_primitive() == result[i].to_primitive()
+        assert attr.asdict(event_list[i]) == attr.asdict(result[i])
 
 
 async def test_get_recent_events_count_equals_one(app, source_event_in_db,
@@ -123,8 +157,9 @@ async def test_get_recent_events_count_equals_one(app, source_event_in_db,
     result = []
     async for doc in docs:
         result.append(doc)
-    event_list = [source_event_in_db,
+    event_list = [
                   child_event_of_source_in_db,
+                  source_event_in_db,
                   parent_event_in_db,
                   event_in_db
                   ]
@@ -137,18 +172,14 @@ async def test_get_recent_events_count_equals_zero(app, source_event_in_db,
                                                    parent_event_in_db,
                                                    event_in_db
                                                    ):
+    """ if the count parameter is 0, the result should be unbounded
+    and return all documents.
+    """
     docs = await app["db"].event.find(count=0)
     result = []
     async for doc in docs:
         result.append(doc)
-    event_list = [source_event_in_db,
-                  child_event_of_source_in_db,
-                  parent_event_in_db,
-                  event_in_db
-                  ]
     assert len(result) == 4
-    for i in range(4):
-        assert result[i].to_primitive() == event_list[i].to_primitive()
 
 
 async def test_get_events_by_count_and_page(app, source_event_in_db,
@@ -156,8 +187,9 @@ async def test_get_events_by_count_and_page(app, source_event_in_db,
                                             parent_event_in_db,
                                             event_in_db
                                             ):
-    event_list = [source_event_in_db,
+    event_list = [
                   child_event_of_source_in_db,
+                  source_event_in_db,
                   parent_event_in_db,
                   event_in_db
                   ]
@@ -167,7 +199,7 @@ async def test_get_events_by_count_and_page(app, source_event_in_db,
     async for doc in docs:
         result.append(doc)
     assert len(result) == 1
-    assert result[0].to_primitive() == event_list[0].to_primitive()
+    assert attr.asdict(result[0]) == attr.asdict(event_list[0])
 
     # second test of the same sorts
     second_docs = await app["db"].event.find(count=2, page=2)
@@ -175,8 +207,8 @@ async def test_get_events_by_count_and_page(app, source_event_in_db,
     async for doc in second_docs:
         result.append(doc)
     assert len(result) == 2
-    assert result[0].to_primitive() == event_list[2].to_primitive()
-    assert result[1].to_primitive() == event_list[3].to_primitive()
+    assert attr.asdict(result[0]) == attr.asdict(event_list[2])
+    assert attr.asdict(result[1]) == attr.asdict(event_list[3])
 
 
 async def test_page_count_less_than_one_raises_exception(app,
@@ -195,17 +227,17 @@ async def test_get_event_neg_count_raise_exception(app, event_in_db,
 
 
 async def test_get_events_by_timestamp(app, source_event_in_db, parent_event_in_db, event_in_db):
-    frm = parent_event_in_db.start_time
-    to = event_in_db.start_time
+    to = source_event_in_db.start_time
+    frm = event_in_db.start_time
     docs = await app["db"].event.find(frm=frm, to=to)
     result = []
     async for doc in docs:
         result.append(doc)
     assert len(result) == 2
-    assert source_event_in_db.to_primitive() == result[0].to_primitive()
-    assert parent_event_in_db.to_primitive() == result[1].to_primitive()
+    assert parent_event_in_db.to_primitive() == result[0].to_primitive()
+    assert event_in_db.to_primitive() == result[1].to_primitive()
 
-    to = event_in_db.start_time + timedelta(seconds=1)
+    to = source_event_in_db.end_time + timedelta(seconds=1)
     docs = await app["db"].event.find(frm=frm, to=to)
     result = []
     async for doc in docs:
@@ -216,10 +248,10 @@ async def test_get_events_by_timestamp(app, source_event_in_db, parent_event_in_
     assert event_in_db.to_primitive() == result[2].to_primitive()
 
 
-async def test_get_events_by_update_timestamp(app, source_event_in_db, update_event_in_db):
-    now = datetime.utcnow()
-    frm = now - timedelta(seconds=10)
-    to = now - timedelta(seconds=5)
+async def test_get_events_by_update_timestamp(app, source_event_in_db, update_event_in_db,
+                                              update_time, patch_update_time):
+    frm = update_time - timedelta(seconds=10)
+    to = update_time - timedelta(seconds=5)
 
     docs = await app["db"].event.find(frm=frm, to=to, use_update_time=True)
     result = []
@@ -227,38 +259,42 @@ async def test_get_events_by_update_timestamp(app, source_event_in_db, update_ev
         result.append(doc)
     assert len(result) == 0
 
-    to = now + timedelta(seconds=1)
+    to = update_time + timedelta(seconds=1)
     docs = await app["db"].event.find(frm=frm, to=to, use_update_time=True)
     result = []
     async for doc in docs:
         result.append(doc)
     assert len(result) == 2
-    assert update_event_in_db.to_primitive() == result[0].to_primitive()
-    assert source_event_in_db.to_primitive() == result[1].to_primitive()
+    expected_results = [
+        source_event_in_db.to_primitive(),
+        update_event_in_db.to_primitive(),
+    ]
+    assert result[0].to_primitive() in expected_results
+    assert result[1].to_primitive() in expected_results
 
     # search with start/end time should not return update_event
     docs = await app["db"].event.find(frm=frm, to=to, use_update_time=False)
     result = []
     async for doc in docs:
         result.append(doc)
-    assert len(result) == 1
-    assert source_event_in_db.to_primitive() == result[0].to_primitive()
+    assert len(result) == 0
 
 
 async def test_get_events_with_only_one_timestamp(app, source_event_in_db,
                                                   parent_event_in_db,
                                                   event_in_db
                                                   ):
-    to = event_in_db.start_time
+    to = source_event_in_db.start_time
     docs = await app["db"].event.find(to=to)
     result = []
     async for doc in docs:
         result.append(doc)
+    # results will include up to, but not including, source event.
     assert len(result) == 2
-    assert source_event_in_db.to_primitive() == result[0].to_primitive()
-    assert parent_event_in_db.to_primitive() == result[1].to_primitive()
+    assert parent_event_in_db.to_primitive() == result[0].to_primitive()
+    assert event_in_db.to_primitive() == result[1].to_primitive()
 
-    to = event_in_db.start_time + timedelta(seconds=1)
+    to = source_event_in_db.start_time + timedelta(seconds=1)
     docs = await app["db"].event.find(to=to)
     result = []
     async for doc in docs:

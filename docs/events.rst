@@ -67,7 +67,7 @@ An example event looks like this:
             # the list of services this event affects.
             # best practice: only attach this to the event that is actually affecting the service, not
             # the event that will CAUSE an affecting event.
-            "service": ["zon-web"],
+            "service": ["tycho"],
             # pending, fail, success. The event can be updated after the fact,
             # so this can represent some transient state as well.
             # conversely, one could an event after a state change as a separate event.
