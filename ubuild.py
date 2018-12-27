@@ -1,4 +1,4 @@
-from orbital_core.build import bootstrap_build
+import subprocess
 from uranium import current_build
 
 current_build.config.set_defaults({
@@ -6,6 +6,7 @@ current_build.config.set_defaults({
 })
 
 current_build.packages.install("orbital-core")
+from orbital_core.build import bootstrap_build
 bootstrap_build(current_build)
 
 
@@ -29,8 +30,10 @@ def start_db(build):
 
 @build.task
 def stop_db(build):
-    build.executables.run(["/bin/bash", "-c", "docker stop tycho-db"])
-    build.executables.run(["/bin/bash", "-c", "docker rm tycho-db"])
+    # using subprocess.call as we don't want to
+    # error out if the container is not running.
+    subprocess.call(["/bin/bash", "-c", "docker stop tycho-db"])
+    subprocess.call(["/bin/bash", "-c", "docker rm tycho-db"])
 
 
 build.tasks.prepend("test", "start_db")

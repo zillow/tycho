@@ -4,7 +4,6 @@ import pytest
 import socket
 from unittest import mock
 from datetime import timedelta
-
 from aiohttp import request
 import asyncio
 from event_tracking.app import create_app
@@ -13,7 +12,6 @@ from event_tracking.models.config import Config, Mongo
 from event_tracking.models.eventdb import EventDB as ModelEventDB
 from event_tracking.models.event import Event as ModelEvent, CATTRS_CONVERTER
 from event_tracking.routes.event import Event
-
 
 global_source_id = "222f1f77bcf86cd799439011"
 # pytest_plugins = 'aiohttp.pytest_plugin'
@@ -95,6 +93,9 @@ def end_time(start_time):
 
 @pytest.fixture
 def event(start_time, end_time):
+    """
+    * should occur before all events.
+    """
     global global_source_id
     return ModelEvent(**{
         "id": "5498d53c5f2d60095267a0bb",
@@ -116,15 +117,18 @@ def event(start_time, end_time):
 
 
 @pytest.fixture
-def parent_event(start_time, end_time):
+def parent_event(end_time):
+    """
+    should occur right after event
+    """
     global global_source_id
     # parent of the event fixture and child of the source
     return ModelEvent(**{
         "id": "111f1f77bcf86cd799439011",
         "source_id": global_source_id,
         "parent_id": "222f1f77bcf86cd799439011",
-        "start_time": start_time - datetime.timedelta(days=3),
-        "end_time": end_time - datetime.timedelta(days=3),
+        "start_time": end_time + datetime.timedelta(hours=1),
+        "end_time": end_time + datetime.timedelta(hours=2),
         "detail_urls": {"jira": "http://jira", "graphite": "http://graphite"},
         "description": "This is a trigger_deploy event.",
         "tags": {
@@ -139,15 +143,18 @@ def parent_event(start_time, end_time):
 
 
 @pytest.fixture
-def child_event_of_source(start_time, end_time):
+def child_event_of_source(end_time):
+    """
+    * should come right after source_event.
+    """
     global global_source_id
     # second child of the source event
     return ModelEvent(**{
         "id": "333f1f77bcf86cd799439333",
         "source_id": global_source_id,
         "parent_id": global_source_id,
-        "start_time": start_time - datetime.timedelta(days=2),
-        "end_time": end_time,
+        "start_time": end_time + datetime.timedelta(hours=5),
+        "end_time": end_time + datetime.timedelta(hours=6),
         "detail_urls": {"jira": "http://jira", "graphite": "http://graphite"},
         "description": "This is a trigger_deploy event.",
         "tags": {
@@ -162,11 +169,14 @@ def child_event_of_source(start_time, end_time):
 
 
 @pytest.fixture
-def source_event(start_time, end_time):
+def source_event(end_time):
+    """
+    * should come after parent_event
+    """
     return ModelEvent(**{
         "id": "222f1f77bcf86cd799439011",
-        "start_time": start_time - datetime.timedelta(days=1),
-        "end_time": end_time - datetime.timedelta(days=1),
+        "start_time": end_time + datetime.timedelta(hours=3),
+        "end_time": end_time + datetime.timedelta(hours=4),
         "detail_urls": {"jira": "http://jira", "graphite": "http://graphite"},
         "description": "This is a trigger_deploy event.",
         "tags": {

@@ -72,21 +72,25 @@ async def test_get_event_with_page_parameters(source_event_in_db,
 async def test_get_events_with_timestamp_queries(parent_event_in_db,
                                                  event_in_db,
                                                  cli):
-    frm = parent_event_in_db.start_time.isoformat()
-    to = event_in_db.start_time.isoformat()
+    """
+    timestamp queries should return events up, but not including,
+    the to. frm should be inclusive.
+    """
+    frm = event_in_db.start_time.isoformat()
+    to = parent_event_in_db.start_time.isoformat()
     params = {"frm": frm, "to": to}
     resp = await cli.get('/api/v1/event/', params=params)
     event_json = (await resp.json())
     assert event_json["count"] == 1
-    assert parent_event_in_db.to_primitive() == event_json["result"][0]
+    assert event_in_db.to_primitive() == event_json["result"][0]
 
-    to = (event_in_db.start_time + timedelta(seconds=1)).isoformat()
+    to = (parent_event_in_db.start_time + timedelta(seconds=1)).isoformat()
     params = {"frm": frm, "to": to}
     resp = await cli.get('/api/v1/event/', params=params)
     event_json = (await resp.json())
     assert event_json["count"] == 2
-    assert parent_event_in_db.to_primitive() == event_json["result"][1]
-    assert event_in_db.to_primitive() == event_json["result"][0]
+    assert event_in_db.to_primitive() == event_json["result"][1]
+    assert parent_event_in_db.to_primitive() == event_json["result"][0]
 
 
 async def test_get_events_with_update_timestamp_queries(parent_event_in_db,
@@ -125,20 +129,19 @@ async def test_get_events_with_timestamp_tag_count(source_event_in_db,
                                                    parent_event_in_db,
                                                    event_in_db,
                                                    cli):
-    frm = parent_event_in_db.start_time.isoformat()
-    to = event_in_db.start_time.isoformat()
+    frm = source_event_in_db.start_time.isoformat()
+    to = child_event_of_source_in_db.start_time.isoformat()
     params = [
         ('frm', frm), ('to', to), ('tag', 'environment:monitor_candidate'),
         ('tag', 'services:tycho'), ('count', "1"),
     ]
+    # the find API should be returning back values with an exclusive upper bound.
+    # in other words, event_in_db starts at to, but will not be included
+    # in the query.
     resp = await cli.get('/api/v1/event/', params=params)
     event_json = (await resp.json())
     assert event_json["count"] == 1
-    assert event_json["result"][0] == parent_event_in_db.to_primitive()
-    assert event_in_db.to_primitive() not in event_json["result"]
-    assert source_event_in_db.to_primitive() not in event_json["result"]
-    assert child_event_of_source_in_db.to_primitive() \
-        not in event_json["result"]
+    assert event_json["result"][0] == source_event_in_db.to_primitive()
 
 
 async def test_get_trace_until_source(event_in_db,
@@ -432,8 +435,8 @@ def test_merge_empty_event_with_new_one():
 
 
 def test_update_empty_event_with_new_one():
-    existing_event = Event({})
-    new_event = Event({"source_id": "5498d53c5f2d60095267a0bc"})
+    existing_event = Event()
+    new_event = Event(source_id="5498d53c5f2d60095267a0bc")
     _update(existing_event, new_event)
     assert attr.asdict(existing_event) == attr.asdict(new_event)
 

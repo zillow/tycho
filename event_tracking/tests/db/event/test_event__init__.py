@@ -138,11 +138,12 @@ async def test_get_most_recent_events(app, source_event_in_db,
     result = []
     async for doc in docs:
         result.append(doc)
-    event_list = [source_event_in_db,
-                  child_event_of_source_in_db,
-                  parent_event_in_db,
-                  event_in_db
-                  ]
+    event_list = [
+        child_event_of_source_in_db,
+        source_event_in_db,
+        parent_event_in_db,
+        event_in_db
+    ]
     for i in range(len(event_list)):
         assert attr.asdict(event_list[i]) == attr.asdict(result[i])
 
@@ -156,8 +157,9 @@ async def test_get_recent_events_count_equals_one(app, source_event_in_db,
     result = []
     async for doc in docs:
         result.append(doc)
-    event_list = [source_event_in_db,
+    event_list = [
                   child_event_of_source_in_db,
+                  source_event_in_db,
                   parent_event_in_db,
                   event_in_db
                   ]
@@ -170,19 +172,14 @@ async def test_get_recent_events_count_equals_zero(app, source_event_in_db,
                                                    parent_event_in_db,
                                                    event_in_db
                                                    ):
+    """ if the count parameter is 0, the result should be unbounded
+    and return all documents.
+    """
     docs = await app["db"].event.find(count=0)
     result = []
     async for doc in docs:
         result.append(doc)
-    event_list = [source_event_in_db,
-                  child_event_of_source_in_db,
-                  parent_event_in_db,
-                  event_in_db
-                  ]
     assert len(result) == 4
-    for i in range(4):
-        assert attr.asdict(result[i]) == attr.asdict(event_list[i])
-        assert result[i].to_primitive() == event_list[i].to_primitive()
 
 
 async def test_get_events_by_count_and_page(app, source_event_in_db,
@@ -190,8 +187,9 @@ async def test_get_events_by_count_and_page(app, source_event_in_db,
                                             parent_event_in_db,
                                             event_in_db
                                             ):
-    event_list = [source_event_in_db,
+    event_list = [
                   child_event_of_source_in_db,
+                  source_event_in_db,
                   parent_event_in_db,
                   event_in_db
                   ]
@@ -229,25 +227,25 @@ async def test_get_event_neg_count_raise_exception(app, event_in_db,
 
 
 async def test_get_events_by_timestamp(app, source_event_in_db, parent_event_in_db, event_in_db):
-    frm = source_event_in_db.start_time
-    to = event_in_db.start_time
+    to = source_event_in_db.start_time
+    frm = event_in_db.start_time
     docs = await app["db"].event.find(frm=frm, to=to)
     result = []
     async for doc in docs:
         result.append(doc)
     assert len(result) == 2
     assert parent_event_in_db.to_primitive() == result[0].to_primitive()
-    assert source_event_in_db.to_primitive() == result[1].to_primitive()
+    assert event_in_db.to_primitive() == result[1].to_primitive()
 
-    to = event_in_db.start_time + timedelta(seconds=1)
+    to = source_event_in_db.end_time + timedelta(seconds=1)
     docs = await app["db"].event.find(frm=frm, to=to)
     result = []
     async for doc in docs:
         result.append(doc)
     assert len(result) == 3
-    assert source_event_in_db.to_primitive() == result[2].to_primitive()
+    assert source_event_in_db.to_primitive() == result[0].to_primitive()
     assert parent_event_in_db.to_primitive() == result[1].to_primitive()
-    assert event_in_db.to_primitive() == result[0].to_primitive()
+    assert event_in_db.to_primitive() == result[2].to_primitive()
 
 
 async def test_get_events_by_update_timestamp(app, source_event_in_db, update_event_in_db,
@@ -286,24 +284,25 @@ async def test_get_events_with_only_one_timestamp(app, source_event_in_db,
                                                   parent_event_in_db,
                                                   event_in_db
                                                   ):
-    to = event_in_db.start_time
+    to = source_event_in_db.start_time
     docs = await app["db"].event.find(to=to)
     result = []
     async for doc in docs:
         result.append(doc)
+    # results will include up to, but not including, source event.
     assert len(result) == 2
-    assert source_event_in_db.to_primitive() == result[0].to_primitive()
-    assert parent_event_in_db.to_primitive() == result[1].to_primitive()
+    assert parent_event_in_db.to_primitive() == result[0].to_primitive()
+    assert event_in_db.to_primitive() == result[1].to_primitive()
 
-    to = event_in_db.start_time + timedelta(seconds=1)
+    to = source_event_in_db.start_time + timedelta(seconds=1)
     docs = await app["db"].event.find(to=to)
     result = []
     async for doc in docs:
         result.append(doc)
     assert len(result) == 3
-    assert event_in_db.to_primitive() == result[0].to_primitive()
-    assert source_event_in_db.to_primitive() == result[1].to_primitive()
-    assert parent_event_in_db.to_primitive() == result[2].to_primitive()
+    assert source_event_in_db.to_primitive() == result[0].to_primitive()
+    assert parent_event_in_db.to_primitive() == result[1].to_primitive()
+    assert event_in_db.to_primitive() == result[2].to_primitive()
 
 
 async def test_get_tree(app, source_event_in_db,
