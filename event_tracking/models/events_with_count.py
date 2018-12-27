@@ -1,13 +1,13 @@
+import attr
+from typing import List
 from .event import Event
-from schematics.models import Model
-from schematics.types import ListType, IntType
-from schematics.types.compound import ModelType
 
 
-class EventListWithCount(Model):
+@attr.s
+class EventListWithCount:
     """
     :param result : the list of events
     :param count : the number of events in result
     """
-    result = ListType(ModelType(Event), default=[])
-    count = IntType()
+    count = attr.ib(type=int)
+    result = attr.ib(type=List[Event], default=attr.Factory(list))

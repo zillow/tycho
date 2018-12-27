@@ -6,6 +6,8 @@ from schematics.contrib.mongo import ObjectIdType
 from schematics.exceptions import DataError
 from schematics.models import Model
 
+from event_tracking.models.event import CATTRS_CONVERTER
+
 
 def test_objectidtype_object_empty():
     obj = ObjectIdType()
@@ -40,38 +42,28 @@ def test_eventdb_no_field_present():
     doc = {}
     # when no illegal value present.
     # below initialization won't raise exception.
-    event = EventDB(doc)
-    with pytest.raises(DataError):
-        event.validate()
+    with pytest.raises(TypeError):
+        CATTRS_CONVERTER.structure(doc, EventDB)
 
 
 def test_eventdb_required_fields_not_present():
     doc = {"detail_urls": {"graphite": "http://graphite",
-           "concrete": "http://concrete"}}
-    event = EventDB(doc)
-    with pytest.raises(DataError):
-        event.validate()
+                           "concrete": "http://concrete"}}
+    with pytest.raises(TypeError):
+        CATTRS_CONVERTER.structure(doc, EventDB)
 
 
 def test_eventdb_required_fields_present():
-    doc = {"_id": "507f1f77bcf86cd799439011",
+    doc = {"id": "507f1f77bcf86cd799439011",
            "update_time": datetime.datetime.utcnow(),
            "time": [datetime.datetime.utcnow()]}
-    event = EventDB(doc)
-    try:
-        event.validate()
-    except pytest.raises(DataError):
-        pytest.fail("This exception shouldn't be raised")
+    CATTRS_CONVERTER.structure(doc, EventDB)
 
 
 def test_eventdb_all_fields_present():
-    doc = {"_id": "507f1f77bcf86cd799439011",
+    doc = {"id": "507f1f77bcf86cd799439011",
            "time": [datetime.datetime.utcnow()],
            "update_time": datetime.datetime.utcnow(),
            "detail_urls": {"graphite": "http://graphite"},
            "tags": ["author:yusuket"]}
-    event = EventDB(doc)
-    try:
-        event.validate()
-    except pytest.raises(DataError):
-        pytest.fail("This exception shouldn't be raised")
+    CATTRS_CONVERTER.structure(doc, EventDB)

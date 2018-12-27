@@ -1,6 +1,9 @@
 import pytest
+import pytz
+from datetime import datetime
 from event_tracking.db.event.serialize import (
   _get_tags, serialize_to_db_event)
+from event_tracking.models.event import Event, ignore_microseconds
 
 
 def test_get_tags_empty_event():
@@ -25,81 +28,73 @@ def test_serialize_to_db_event_none_event():
 
 
 def test_serialize_to_db_event_empty_event(patch_update_time, update_time):
-    assert serialize_to_db_event({}) == {"tags": [], "time": [],
-                                         "update_time": update_time}
+    event_db_dict = serialize_to_db_event(Event())
+    assert event_db_dict["tags"] == []
+    assert event_db_dict["update_time"] == update_time
 
 
 def test_serialize_to_db_event_no_tag_field(patch_update_time, update_time):
-    assert serialize_to_db_event(
-      {"detail_urls": "http://xyz"}) == {
-         "tags": [], "detail_urls": "http://xyz", "time": [],
-         "update_time": update_time}
+    event_db_dict = serialize_to_db_event(Event(detail_urls="http://xyz"))
+    assert event_db_dict["tags"] == []
+    assert event_db_dict["detail_urls"] == "http://xyz"
+    assert event_db_dict["update_time"] == update_time
 
 
 def test_serialize_to_db_event_tag_fields(patch_update_time, update_time):
-    assert serialize_to_db_event(
-      {"source_id": "123"}) == {"tags": ["source_id:123"], "time": [],
-                                "update_time": update_time}
-
-
-def test_serialize_to_db_event_tag_field_array_no_tag(patch_update_time,
-                                                      update_time):
-    assert serialize_to_db_event(
-      {"source": ["mozart", "orchestra"]}) == {"tags": [], "time": [],
-                                               "update_time": update_time}
-
-
-def test_serialize_to_db_event_none_field_value(patch_update_time, update_time):
-    assert serialize_to_db_event({None: None}) == {"tags": [], "time": [],
-                                                   "update_time": update_time}
+    event_db_dict = serialize_to_db_event(Event(source_id="123"))
+    assert event_db_dict["tags"] == ["source_id:123"]
+    assert event_db_dict["update_time"] == update_time
 
 
 def test_serialize_to_db_event_tag_field_array_tag(patch_update_time,
                                                    update_time):
-    assert serialize_to_db_event(
-      {"tags": [], "tags": {"source": ["mozart", "orchestra"]}}) == {
-       "tags": ["source:mozart", "source:orchestra"], "time": [],
-       "update_time": update_time}
+    event_db_dict = serialize_to_db_event(
+        Event(tags={"source": ["deploy", "orchestra"]}))
+    assert event_db_dict["tags"] == ["source:deploy", "source:orchestra"]
+    assert event_db_dict["update_time"] == update_time
 
 
 def test_serialize_to_db_id(patch_update_time, update_time):
-    assert serialize_to_db_event(
-      {"id": "507f1f77bcf86cd7994390"}) == {
-        "_id": "507f1f77bcf86cd7994390",
-        "tags": [], "time": [], "update_time": update_time}
+    event_db_dict = serialize_to_db_event(Event(id="507f1f77bcf86cd7994390"))
+    assert event_db_dict["_id"] == "507f1f77bcf86cd7994390"
+    assert event_db_dict["update_time"] == update_time
 
 
 def test_serialize_to_db_time_start_time(patch_update_time, update_time):
-    assert serialize_to_db_event(
-      {"start_time": "10AM"}) == {"tags": [], "time": ["10AM"],
-                                  "update_time": update_time}
+    start_time = ignore_microseconds(datetime.utcnow())
+    event_db_dict = serialize_to_db_event(Event(start_time=start_time))
+    assert start_time in event_db_dict["time"]
+    assert event_db_dict["update_time"] == update_time
 
 
 def test_serialize_to_db_time_end_time(patch_update_time, update_time):
-    assert serialize_to_db_event(
-      {"end_time": "11AM"}) == {"tags": [], "time": ["11AM"],
-                                "update_time": update_time}
+    end_time = ignore_microseconds(datetime.utcnow())
+    event_db_dict = serialize_to_db_event(Event(end_time=end_time))
+    assert end_time in event_db_dict["time"]
+    assert event_db_dict["update_time"] == update_time
 
 
 def test_serialize_to_db_time_both_times(patch_update_time, update_time):
-    assert serialize_to_db_event(
-      {"start_time": "10AM", "end_time": "11AM"}) == {
-          "tags": [], "time": ["10AM", "11AM"], "update_time": update_time}
+    start_time = ignore_microseconds(datetime.utcnow())
+    end_time = ignore_microseconds(datetime.utcnow())
+    event_db_dict = serialize_to_db_event(
+        Event(start_time=start_time, end_time=end_time))
+    assert event_db_dict["time"] == [start_time, end_time]
+    assert event_db_dict["update_time"] == update_time
 
 
 def test_serialize_to_db_detail_urls_exist(patch_update_time, update_time):
-    assert serialize_to_db_event(
-      {"detail_urls": {"http://url"}}) == {
-          "tags": [], "detail_urls": {"http://url"}, "time": [],
-          "update_time": update_time}
+    event_db_dict = serialize_to_db_event(Event(detail_urls={"http://url"}))
+    assert event_db_dict["detail_urls"] == {"http://url"}
+    assert event_db_dict["update_time"] == update_time
 
 
 def test_serialize_to_db_detail_urls_donot_exist():
-    assert "detail_urls" not in serialize_to_db_event({})
+    assert serialize_to_db_event(Event()).get("detail_urls") == {}
 
 
 def test_serialize_to_db_event_all_fields(app, event, eventdb, patch_update_time):
     result = serialize_to_db_event(event)
     result["tags"] = sorted(result["tags"])
-    eventdb["tags"] = sorted(eventdb["tags"])
-    assert result == eventdb
+    eventdb.tags = sorted(eventdb.tags)
+    assert result == eventdb.asdict()

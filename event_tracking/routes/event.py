@@ -1,4 +1,5 @@
 import aiohttp_transmute
+import attr
 import json
 import os
 
@@ -9,7 +10,6 @@ from datetime import datetime
 from ..models.eventnode import EventNode
 from ..models.events_with_count import EventListWithCount
 from ..models.event import Event
-from schematics.types import BooleanType, DateTimeType
 
 from ..templates import get_template
 
@@ -56,10 +56,10 @@ async def get_parent_events_until_source(request, event_id: str) -> [Event]:
 
 @aiohttp_transmute.describe(methods="GET",
                             paths="/api/v1/event/")
-async def get_events(request, count: int=100,
-                     frm: DateTimeType(required=True)=None, to: DateTimeType(required=True)=None,
-                     use_update_time: BooleanType(required=True)=False,
-                     tag: [str]=None, page: int=1) -> EventListWithCount:
+async def get_events(request, count: int = 100,
+                     frm: datetime = None, to: datetime = None,
+                     use_update_time: bool = False,
+                     tag: [str] = None, page: int = 1) -> EventListWithCount:
     """
     return events based on query parameters
     :param request: the client request object
@@ -86,7 +86,8 @@ async def get_events(request, count: int=100,
              and the number of results in its 'count' field
     """
     result = []
-    qry = {"tags": tag,"count": count,"page": page, "use_update_time": use_update_time}
+    qry = {"tags": tag, "count": count, "page": page,
+           "use_update_time": use_update_time}
 
     for param in ['frm', 'to']:
         value = eval(param)
@@ -97,7 +98,7 @@ async def get_events(request, count: int=100,
     async for doc in docs:
         result.append(doc)
     count = len(result)
-    event_with_count = EventListWithCount({"result": result, "count": count})
+    event_with_count = EventListWithCount(result=result, count=count)
     return event_with_count
 
 
@@ -135,9 +136,6 @@ async def put_event(request, event: Event) -> Event:
     :param event: the event to be stored
     :return: the stored event
     """
-    if not event.to_native():
-        raise APIException("Invalid event provided")
-    event.validate()
     await request.app["db"].event.save(event)
     return event
 
@@ -152,13 +150,14 @@ async def delete_event(request, event_id: str) -> bool:
     """
     result = await request.app["db"].event.delete_by_id(event_id)
     if not result:
-        raise APIException("Can not delete event with id: {0}".format(event_id))
+        raise APIException(
+            "Can not delete event with id: {0}".format(event_id))
     return {'message': 'Event: {0} deleted successfully'.format(event_id)}
 
 
 @aiohttp_transmute.describe(methods="POST", paths="/api/v1/event/")
 async def post_event(request, event: Event,
-                     operation: str="merge", insert: bool=False) -> Event:
+                     operation: str = "merge", insert: bool = False) -> Event:
     """
         merge or update an existing event with a new one
         :param request: the request object
@@ -169,12 +168,9 @@ async def post_event(request, event: Event,
              the new values given by the post request and add new values
         :return: the updated/merged event
     """
-    if not event.to_native():
-        raise APIException("Invalid event provided")
-
-    event.validate()
     if operation != "merge" and operation != "update":
-        raise APIException("only update and merge operation are supported, {0} passed".format(operation))
+        raise APIException(
+            "only update and merge operation are supported, {0} passed".format(operation))
 
     try:
         existing_event = await request.app["db"].event.find_by_id(event.id)
@@ -197,10 +193,11 @@ def _merge(existing_event, new_event):
     :param: the dictionary with new attributes to merge with the existing event
     :modifies: existing_event with the merged values
     """
-    for key in new_event:
-        if new_event.get(key) is not None:
+    new_event_dict = attr.asdict(new_event)
+    for key in new_event_dict:
+        if new_event_dict.get(key):
             # try merging the values which share the same keys
-            if key in existing_event and existing_event[key] is not None:
+            if getattr(existing_event, key):
                 if key != "tags":
                     _merge_reserved_keys(key, existing_event, new_event)
                 else:
@@ -208,7 +205,7 @@ def _merge(existing_event, new_event):
                     _add_to_dict(key, existing_event, new_event)
             # else just add the new values to our event
             else:
-                existing_event[key] = new_event[key]
+                setattr(existing_event, key, new_event_dict[key])
 
 
 def _merge_reserved_keys(key, existing_event, new_event):
@@ -224,32 +221,33 @@ def _merge_reserved_keys(key, existing_event, new_event):
     # change the start time to be the earlier
     # of the two keys
     if key == "start_time":
-        if new_event.get(key) is not None:
-            existing_event[key] = min(new_event[key],
-                                      existing_event[key])
+        if new_event.start_time is not None:
+            existing_event.start_time = min(
+                new_event.start_time, existing_event.start_time)
 
     elif key == "end_time":
         # change the end time to be the later
         # of the two keys
-        if new_event.get(key) is not None:
-            existing_event[key] = max(new_event[key],
-                                      existing_event[key])
+        if new_event.end_time is not None:
+            existing_event.end_time = max(
+                new_event.end_time, existing_event.end_time)
 
     elif key == "description":
         # append the new_event's description to the already existing one
-        str1 = existing_event[key].strip()
-        str2 = new_event[key].strip()
+        str1 = existing_event.description.strip()
+        str2 = new_event.description.strip()
         if str2 and str2 not in str1:
-            existing_event[key] = str1 + "\n" + str2 # Adding new line as a separator of events description
+            # Adding new line as a separator of events description
+            existing_event.description = str1 + "\n" + str2
 
     elif key == "detail_urls":
         # merge two detail_urls lists given by new_event and existing_event
-        for k in new_event[key]:
-            if new_event[key].get(k) is not None:
-                existing_event[key][k] = new_event[key][k]
+        for k in new_event.detail_urls:
+            if new_event.detail_urls.get(k) is not None:
+                existing_event.detail_urls[k] = new_event.detail_urls[k]
     else:
         # raise exception if the other reserved vals don't match
-        if existing_event[key] != new_event[key]:
+        if getattr(existing_event, key) != getattr(new_event, key):
             raise ValueError("Merge not possible:"
                              "reserved keys have clashing values.")
 
@@ -262,8 +260,8 @@ def _add_to_dict(key, existing_event, new_event):
     :param new_event: the new db to be merged
     :modifies the existing_event with the merged values
     """
-    prev = existing_event[key]
-    new = new_event[key]
+    prev = getattr(existing_event, key)
+    new = getattr(new_event, key)
 
     for k in new:
         if k not in prev:
@@ -273,7 +271,7 @@ def _add_to_dict(key, existing_event, new_event):
                 if elem not in prev[k]:
                     prev[k].append(elem)
 
-    existing_event[key] = prev
+    setattr(existing_event, key, prev)
 
 
 def _update(existing_event, new_event):
@@ -286,11 +284,11 @@ def _update(existing_event, new_event):
     :modifies: existing_event with the merged values
 
     """
-    new_event.validate()
+    new_event_dict = attr.asdict(new_event)
 
-    for key in new_event:
-        if new_event.get(key) is not None:
-            existing_event[key] = new_event[key]
+    for key in new_event_dict:
+        if new_event_dict.get(key) is not None:
+            setattr(existing_event, key, new_event_dict[key])
 
 
 async def get_event_root_and_impact_diagram(request):
@@ -301,7 +299,8 @@ async def get_event_root_and_impact_diagram(request):
     event_id = request.match_info['event_id']
     event_tree = (await request.app["db"].event.trace(event_id))
     if not event_tree:
-        raise HTTPNotFound(text='Event ID {} is not available in DB'.format(event_id))
+        raise HTTPNotFound(
+            text='Event ID {} is not available in DB'.format(event_id))
     root_event = event_tree[-1]
     event = await request.app["db"].event.get_tree(root_event.id)
 
@@ -327,4 +326,5 @@ def add_event_api(app):
     route(app, get_parent_events_until_source)
     route(app, get_events)
     route(app, get_event_impact)
-    app.router.add_route('GET', "/event/{event_id}/", get_event_root_and_impact_diagram)
+    app.router.add_route(
+        'GET', "/event/{event_id}/", get_event_root_and_impact_diagram)

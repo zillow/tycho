@@ -1,4 +1,5 @@
 import os
+import logging
 from aiohttp import web
 from aiohttp_transmute import TransmuteUrlDispatcher
 from .routes import add_routes
@@ -9,11 +10,12 @@ APP_ROOT = os.path.dirname(__file__)
 
 
 async def create_app(loop, config, **kwargs):
-    app = web.Application(loop=loop)
+    app = web.Application()
     bootstrap_app(app, APP_ROOT,
                   service_name="tycho",
-                  service_description="A change management tracking service")
+                  service_description="A service for tracking operational change.")
     add_routes(app)
+    # add attributes
     app["config"] = config
     app.update(**kwargs)
     app.on_startup.append(lambda app: init_app(app, config))

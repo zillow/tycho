@@ -1,5 +1,5 @@
 from datetime import datetime
-from event_tracking.models.event import Event
+from ...models.event import Event
 from typing import Dict, List
 
 
@@ -13,26 +13,26 @@ def serialize_to_db_event(event: Event) -> Dict:
 
     new_event["tags"] = []
 
-    if event.get("tags") is not None:
-        new_event["tags"].extend(_get_tags(event["tags"]))
+    if event.tags is not None:
+        new_event["tags"].extend(_get_tags(event.tags))
 
     for key in ["source_id", "parent_id"]:
-        if event.get(key) is not None:
+        if getattr(event, key):
             new_event["tags"].append(
-                "{key}:{value}".format(key=key, value=event[key]))
+                "{key}:{value}".format(key=key, value=getattr(event, key)))
 
-    if event.get("id") is not None:
-        new_event["_id"] = str(event["id"])
+    if event.id is not None:
+        new_event["_id"] = str(event.id)
 
     new_event["time"] = []
 
     for key in ["start_time", "end_time"]:
-        if event.get(key) is not None:
-            new_event["time"].append(event[key])
+        if getattr(event, key) is not None:
+            new_event["time"].append(getattr(event, key))
 
     for key in ["detail_urls", "description"]:
-        if event.get(key) is not None:
-            new_event[key] = event[key]
+        if getattr(event, key) is not None:
+            new_event[key] = getattr(event, key)
 
     new_event["update_time"] = datetime.utcnow()
 

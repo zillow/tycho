@@ -1,7 +1,5 @@
-from collections import defaultdict
-
-from event_tracking.models.eventdb import EventDB
-from event_tracking.models.event import Event
+from ...models.eventdb import EventDB
+from ...models.event import Event
 from typing import Dict, List
 
 
@@ -10,7 +8,7 @@ _reserved_fields_in_eventdb_tag = {
 }
 
 
-def deserialize_db_event(eventdb: EventDB) -> Event:
+def deserialize_db_event(eventdb: Dict) -> Event:
     """
     Transforms DB event format to Public event format
     """
@@ -33,7 +31,7 @@ def deserialize_db_event(eventdb: EventDB) -> Event:
         if "description" in eventdb:
             new_event["description"] = eventdb["description"]
 
-    return Event(new_event)
+    return Event(**new_event)
 
 
 def _extract_tags(tags: Dict) -> Dict:
@@ -42,7 +40,7 @@ def _extract_tags(tags: Dict) -> Dict:
     dictionary of key-value pairs.
     """
     new_event = {}
-    tagged_fields = defaultdict(list)
+    tagged_fields = {}
 
     if tags:
         for doc in tags:
@@ -52,7 +50,10 @@ def _extract_tags(tags: Dict) -> Dict:
                 new_event[key] = value
             # key already present, no need to initialize.
             else:
-                tagged_fields[key].append(value)
+                if key in tagged_fields:
+                    tagged_fields[key].append(value)
+                else:
+                    tagged_fields[key] = [value]
 
     if len(tagged_fields) > 0:
         new_event["tags"] = tagged_fields

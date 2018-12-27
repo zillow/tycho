@@ -2,12 +2,13 @@ import pymongo
 from ..utils import async_generator
 from ...models.eventnode import EventNode
 from ...models.event import Event as ModelEvent
-from aiohttp_transmute import APIException
 from aiohttp.web import HTTPNotFound
 import queue as q
 
 from .deserialize import deserialize_db_event
 from .serialize import serialize_to_db_event
+
+MAX_RECURSIVE_DEPTH = 100
 
 
 class Event:
@@ -40,7 +41,7 @@ class Event:
             raise HTTPNotFound(text="cannot find event {0}".format(id))
         return deserialize_db_event(document)
 
-    async def update_by_id(self, id, update_doc: ModelEvent, insert: bool=False):
+    async def update_by_id(self, id, update_doc: ModelEvent, insert: bool = False):
         new_data = serialize_to_db_event(update_doc)
         result = await self.collection.update(
             {"_id": id}, new_data, upsert=insert)
@@ -65,27 +66,39 @@ class Event:
         query = {}
         if tags is not None:
             query["tags"] = {"$all": tags}
-        if frm is not None:
-            query[time_field] = {"$gte": frm}
-        if to is not None:
-            if query.get(time_field) is None:
-                query[time_field] = {"$lt": to}
-            else:
-                query[time_field]["$lt"] = to
+
+        # optimize common use case
+        # https://docs.mongodb.com/manual/core/multikey-index-bounds/
+        if frm and to and not use_update_time:
+            query[time_field] = {
+                "$elemMatch": {
+                    "$gte": frm,
+                    "$lt": to,
+                }
+            }
+        else:
+            if frm is not None:
+                query[time_field] = {"$gte": frm}
+            if to is not None:
+                if query.get(time_field) is None:
+                    query[time_field] = {"$lt": to}
+                else:
+                    query[time_field]["$lt"] = to
+
         cursor = self.collection.find(query).sort([(time_field, -1)]).skip(
             (page-1)*count).limit(count)
         return async_generator(cursor, deserialize_db_event)
 
     async def get_tree(self, id):
         root_event = await self.find_by_id(id)
-        root_event_node = EventNode({"event": root_event})
+        root_event_node = EventNode(event=root_event)
         queue = q.Queue()
         queue.put(root_event_node)
         while (not queue.empty()):
             event_node = queue.get()
             children = await self.find_by_parent_id(event_node.event.id)
             async for child in children:
-                child_node = EventNode({"event": child})
+                child_node = EventNode(event=child)
                 if child_node not in event_node.children:
                     event_node.children.append(child_node)
                 queue.put(child_node)
@@ -94,12 +107,15 @@ class Event:
     async def trace(self, event_id):
         """ return back the root-level parent id of the event """
         result = []
+
         currId = event_id
-        while (currId is not None):
+        curr_depth = 0
+        while currId and curr_depth < MAX_RECURSIVE_DEPTH:
             try:
                 doc = await self.find_by_id(currId)
                 result.append(doc)
-                currId = doc.get("parent_id")
+                currId = doc.parent_id
+                curr_depth += 1
             except HTTPNotFound:
                 currId = None
         return result
