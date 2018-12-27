@@ -123,8 +123,8 @@ def parent_event(start_time, end_time):
         "id": "111f1f77bcf86cd799439011",
         "source_id": global_source_id,
         "parent_id": "222f1f77bcf86cd799439011",
-        "start_time": start_time - datetime.timedelta(days=1),
-        "end_time": end_time,
+        "start_time": start_time - datetime.timedelta(days=3),
+        "end_time": end_time - datetime.timedelta(days=3),
         "detail_urls": {"jira": "http://jira", "graphite": "http://graphite"},
         "description": "This is a trigger_deploy event.",
         "tags": {
@@ -165,8 +165,8 @@ def child_event_of_source(start_time, end_time):
 def source_event(start_time, end_time):
     return ModelEvent(**{
         "id": "222f1f77bcf86cd799439011",
-        "start_time": start_time - datetime.timedelta(days=3),
-        "end_time": end_time,
+        "start_time": start_time - datetime.timedelta(days=1),
+        "end_time": end_time - datetime.timedelta(days=1),
         "detail_urls": {"jira": "http://jira", "graphite": "http://graphite"},
         "description": "This is a trigger_deploy event.",
         "tags": {

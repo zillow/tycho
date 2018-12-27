@@ -27,8 +27,6 @@ async def test_find_one_data_not_exists(app):
 
 
 async def test_find_by_id_data_exist(app, event):
-    import pdb
-    pdb.set_trace()
     await app["db"].event.save(event)
     result = await app["db"].event.find_by_id(event.id)
     assert result == event
@@ -294,8 +292,8 @@ async def test_get_events_with_only_one_timestamp(app, source_event_in_db,
     async for doc in docs:
         result.append(doc)
     assert len(result) == 2
-    assert parent_event_in_db.to_primitive() == result[0].to_primitive()
-    assert source_event_in_db.to_primitive() == result[1].to_primitive()
+    assert source_event_in_db.to_primitive() == result[0].to_primitive()
+    assert parent_event_in_db.to_primitive() == result[1].to_primitive()
 
     to = event_in_db.start_time + timedelta(seconds=1)
     docs = await app["db"].event.find(to=to)
@@ -303,9 +301,9 @@ async def test_get_events_with_only_one_timestamp(app, source_event_in_db,
     async for doc in docs:
         result.append(doc)
     assert len(result) == 3
-    assert source_event_in_db.to_primitive() == result[2].to_primitive()
-    assert parent_event_in_db.to_primitive() == result[1].to_primitive()
     assert event_in_db.to_primitive() == result[0].to_primitive()
+    assert source_event_in_db.to_primitive() == result[1].to_primitive()
+    assert parent_event_in_db.to_primitive() == result[2].to_primitive()
 
 
 async def test_get_tree(app, source_event_in_db,

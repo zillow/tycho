@@ -25,7 +25,7 @@ class Event:
 
     async def save(self, data: ModelEvent):
         new_db_format = serialize_to_db_event(data)
-        result = await self.collection.save(new_db_format)
+        result = await self.collection.insert_one(new_db_format)
         return result
 
     async def find_one(self) -> ModelEvent:
@@ -43,7 +43,7 @@ class Event:
 
     async def update_by_id(self, id, update_doc: ModelEvent, insert: bool = False):
         new_data = serialize_to_db_event(update_doc)
-        result = await self.collection.update(
+        result = await self.collection.replace_one(
             {"_id": id}, new_data, upsert=insert)
         return result
 
@@ -123,5 +123,5 @@ class Event:
     async def delete_by_id(self, id) -> bool:
         """ deletes event with provided id and returns True otherwise False"""
         result_map = {0: False, 1: True, None: False}
-        result = await self.collection.remove({"_id": id})
-        return result_map[result.get('n', None)]
+        result = await self.collection.delete_one({"_id": id})
+        return result_map[result.deleted_count]
