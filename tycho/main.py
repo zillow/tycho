@@ -14,5 +14,4 @@ ROOT = os.path.dirname(os.path.dirname(__file__))
 DEFAULT_CONFIG_PATH = os.path.join(ROOT, "config", "current", "config.yaml")
 config_path = DEFAULT_CONFIG_PATH
 config = from_yaml(config_path)
-loop = asyncio.get_event_loop()
-app = loop.run_until_complete(create_app(loop, config))
+app = create_app(config)

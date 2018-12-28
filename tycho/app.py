@@ -9,7 +9,7 @@ from orbital_core import bootstrap_app
 APP_ROOT = os.path.dirname(__file__)
 
 
-async def create_app(loop, config, **kwargs):
+def create_app(config, **kwargs):
     app = web.Application()
     bootstrap_app(app, APP_ROOT,
                   service_name="tycho",
