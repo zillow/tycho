@@ -46,10 +46,7 @@ def config():
 
 @pytest.fixture
 def app(loop, config, db):
-    return loop.run_until_complete(
-        create_app(loop, config, db=db)
-    )
-
+    return create_app(config, db=db)
 
 @pytest.yield_fixture
 def db(loop, config):
