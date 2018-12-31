@@ -3,17 +3,24 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to event-tracking-service's documentation!
+Welcome to Tycho's documentation!
 ==================================================
 
-The `event-tracking-service </>`_ is designed to store and display events
-that have occurred over points in time. It is useful to track various
-events in a product pipeline:
+Tycho is a service designed for durable storage and fast querying of events that indicate operational
+change. Examples of such events include:
 
-* builds
 * deployments
-* operational events
-* manual work
+* work-in-action (upgrading a host, network card)
+* AB bucket changes
+
+In short, any change that can affect the behavior of a service.
+
+Once this data is in Tycho, you can perform various queries of the data such as:
+
+* querying a single event
+* querying a series of events based on tags and time ranges when the event occurred
+* querying for a tree of events: if a parent-child relationship is specified in events,
+  Tycho can construct a tree and return the full tree of results.
 
 Events must contain a timestamp, and allow an optional description and
 arbritrary tags that can be queried from the `API </api/>`_.
@@ -21,7 +28,7 @@ arbritrary tags that can be queried from the `API </api/>`_.
 Events may also reference a parent event, which ETS can use to
 generate a tree display signifying that relationship.
 
-See :doc:`events` for more information
+See :doc:`userguide` for more information
 
 
 Contents:
@@ -29,6 +36,7 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
+   userguide
    events
 
 

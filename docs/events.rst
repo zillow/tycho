@@ -32,8 +32,8 @@ An example event looks like this:
         // in the case where is one is not passed, the current time is used.
         // In the case where a single timestamp is passed, it is considered
         //     both the start and end time.
-        "start_time": "12/05/16:10:25:00",
-        "end_time": "12/05/16:10:26:00",
+        "start_time": "2018-12-31T18:38:52.345000+00:00",
+        "end_time": "2018-12-31T18:58:52.345000+00:00",
         // a string with the description.
         "description": "This is a Concrete event",
         // Links to other systems and services can added to this object.

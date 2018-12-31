@@ -45,7 +45,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = 'event-tracking-service'
+project = 'tycho'
 copyright = '2016, orbital@example.com'
 
 # The version info for the project you're documenting, acts as replacement for
