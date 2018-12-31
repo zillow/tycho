@@ -19,10 +19,8 @@ global_source_id = "222f1f77bcf86cd799439011"
 DB_NAME = "tycho-tests-{}".format(os.getpid())
 
 DB_CONFIG = Mongo({
-        "db_name": DB_NAME,
-        "hosts": ",".join(["localhost:27017"]),
-        "max_pool_size": 10,
-        "write_concern": 1
+    "uri": f"mongodb://localhost:27017/?maxPoolSize=10&w=1",
+    "db_name": DB_NAME,
 })
 
 
@@ -51,19 +49,15 @@ def app(loop, config, db):
 @pytest.yield_fixture
 def db(loop, config):
     asyncio.set_event_loop(loop)
-    DB_NAME = config.mongo.db_name
-    if DB_NAME is "ets-monitor_live":
-        raise Exception("ets-monitor_live should not be used for unit testing")
     _db = init_db(config.mongo)
-
     yield _db
     if _db:
         loop.run_until_complete(_db.command("dropDatabase"))
 
 
 @pytest.fixture
-def cli(loop, test_client, config, app):
-    return loop.run_until_complete(test_client(app))
+def cli(loop, aiohttp_client, config, app):
+    return loop.run_until_complete(aiohttp_client(app))
 
 
 @pytest.fixture

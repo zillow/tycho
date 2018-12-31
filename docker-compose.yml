@@ -3,6 +3,6 @@ services:
   app:
     build: .
     ports:
-     - "12345:80"
+     - "8081:8081"
   mongo:
     image: "mongo"
