@@ -19,7 +19,7 @@ global_source_id = "222f1f77bcf86cd799439011"
 DB_NAME = "tycho-tests-{}".format(os.getpid())
 
 DB_CONFIG = Mongo({
-    "uri": f"mongodb://localhost:27017/?maxPoolSize=10&w=1",
+    "uri": "mongodb://localhost:27017/?maxPoolSize=10&w=1",
     "db_name": DB_NAME,
 })
 

@@ -8,7 +8,6 @@ DB_URI = os.environ.get(
     "mongodb://mongo:27017/?maxPoolSize=1&w=1"
 )
 
-print(DB_URI)
 
 config = Config({
     "mongo": {
