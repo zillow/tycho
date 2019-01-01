@@ -1,16 +1,20 @@
 import asyncio
+import os
 from tycho.app import create_app
 from tycho.models.config import Config
 
+DB_URI = os.environ.get(
+    "TYCHO_MONGODB_URI",
+    "mongodb://mongo:27017/?maxPoolSize=1&w=1"
+)
+
+
 config = Config({
     "mongo": {
+        "uri": DB_URI,
         "db_name": "tycho",
-        "hosts": "mongo:27017",
-        "max_pool_size": 1,
-        "write_concern": 1
     },
 })
 
-
 loop = asyncio.get_event_loop()
-app = loop.run_until_complete(create_app(loop, config))
+app = create_app(config)

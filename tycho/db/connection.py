@@ -22,11 +22,12 @@ def get_db(db_config):
     creates connection with dabatase and gets db object to connect.
     """
     connection = motor.motor_asyncio.AsyncIOMotorClient(
-        host=db_config.hosts,
-        replicaset=db_config.replicaset,
-        maxPoolSize=db_config.max_pool_size,
+        host=db_config.uri,
+        # secondarypreferred has proved to be a good practice,
+        # as it enabled minimal contention on the node that should
+        # be critical and handle writes. Oftentimes delay of event
+        # propagation is in the milliseconds.
         readPreference="secondaryPreferred",
-        w=db_config.write_concern
     )
     db = connection[db_config.db_name]
     return db
