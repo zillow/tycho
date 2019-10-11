@@ -140,7 +140,8 @@ async def put_event(request, event: Event) -> Event:
     :return: the stored event
     """
     await request.app["db"].event.save(event)
-    LOG.info(event.to_primitive())
+    if request.app["config"].log_events:
+        LOG.info(event.to_primitive())
     return event
 
 
@@ -182,9 +183,11 @@ async def post_event(request, event: Event,
             _merge(existing_event, event)
         else:
             _update(existing_event, event)
-        LOG.info(event.to_primitive())
     except HTTPNotFound:
         existing_event = event
+
+    if request.app["config"].log_events:
+        LOG.info(event.to_primitive())
     await request.app["db"].event.update_by_id(event.id, existing_event, insert)
     return existing_event
 

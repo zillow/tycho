@@ -25,7 +25,7 @@ setup(name='tycho',
           'aiohttp-transmute',
           'motor',
           'pymongo',
-          'orbital-core'
+          'orbital-core',
       ],
       entry_points={
           'console_scripts': [

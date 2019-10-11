@@ -225,22 +225,29 @@ async def test_get_event_impact_diagram_with_invalid_id(cli):
     assert resp_text == 'Event ID {} is not available in DB'.format(event_id)
 
 
-async def test_put_event(db, event, cli):
-    resp = await cli.put('/api/v1/event/',
-                         headers={"content-type": "application/json"},
-                         data=json.dumps({"event":
-                                          event.to_primitive()}))
-    assert resp.status == 200
-    retrieved_event_json = (await resp.json())
-    retrieved_event = Event.from_dict(retrieved_event_json)
-    resp2 = await cli.get('/api/v1/event/{0}'.format(
-        event.id
-    ))
-    assert resp2.status == 200
-    retrieved_event2_json = (await resp2.json())
-    retrieved_event2 = Event.from_dict(retrieved_event2_json)
-    assert (retrieved_event.to_primitive()
-            == retrieved_event2.to_primitive())
+@pytest.mark.parametrize("log", [False, True])
+async def test_put_event(db, event, cli, log, app):
+    with patch("tycho.routes.event.LOG") as mock_log:
+        app["config"].log_events = log
+        resp = await cli.put(f'/api/v1/event/',
+                             headers={"content-type": "application/json"},
+                             data=json.dumps({"event":
+                                              event.to_primitive()}))
+        assert resp.status == 200
+        retrieved_event_json = (await resp.json())
+        retrieved_event = Event.from_dict(retrieved_event_json)
+        resp2 = await cli.get('/api/v1/event/{0}'.format(
+            event.id
+        ))
+        assert resp2.status == 200
+        retrieved_event2_json = (await resp2.json())
+        retrieved_event2 = Event.from_dict(retrieved_event2_json)
+        assert (retrieved_event.to_primitive()
+                == retrieved_event2.to_primitive())
+        if log:
+            mock_log.info.assert_called_with(event.to_primitive())
+        else:
+            assert mock_log.assert_not_called
 
 
 async def test_put_invalid_event_raises_exception(cli):
@@ -310,18 +317,25 @@ async def test_post_dont_allow_invalid_opers(event, cli):
     assert resp.status == 400
 
 
-async def test_post_event_merge(event, cli):
-    resp = await cli.post('/api/v1/event/',
-                          headers={"content-type": "application/json"},
-                          data=json.dumps({"operation":
-                                           "merge",
-                                           "event":
-                                           event.to_primitive()}))
-    retrieved_event_json = (await resp.json())
-    retrieved_event = Event.from_dict(retrieved_event_json)
-    assert (retrieved_event.to_primitive()
-            == event.to_primitive())
-    assert resp.status == 200
+@pytest.mark.parametrize("log", [False, True])
+async def test_post_event_merge(event, cli, app, log):
+    with patch("tycho.routes.event.LOG") as mock_log:
+        app["config"].log_events = log
+        resp = await cli.post('/api/v1/event/',
+                              headers={"content-type": "application/json"},
+                              data=json.dumps({"operation":
+                                               "merge",
+                                               "event":
+                                               event.to_primitive()}))
+        retrieved_event_json = (await resp.json())
+        retrieved_event = Event.from_dict(retrieved_event_json)
+        assert (retrieved_event.to_primitive()
+                == event.to_primitive())
+        assert resp.status == 200
+        if log:
+            mock_log.info.assert_called_with(event.to_primitive())
+        else:
+            assert mock_log.assert_not_called
 
 
 async def test_post_event_without_id(event, cli):
