@@ -2,7 +2,7 @@ import aiohttp_transmute
 import attr
 import json
 import os
-
+import logging
 from aiohttp import web
 from aiohttp.web import HTTPNotFound
 from aiohttp_transmute import (APIException, add_route, route)
@@ -12,6 +12,9 @@ from ..models.events_with_count import EventListWithCount
 from ..models.event import Event
 
 from ..templates import get_template
+
+
+LOG = logging.getLogger(__name__)
 
 
 @aiohttp_transmute.describe(methods="GET", paths="/api/v1/event/{event_id}")
@@ -137,6 +140,8 @@ async def put_event(request, event: Event) -> Event:
     :return: the stored event
     """
     await request.app["db"].event.save(event)
+    if request.app["config"].log_events:
+        LOG.info(event.to_primitive())
     return event
 
 
@@ -180,6 +185,9 @@ async def post_event(request, event: Event,
             _update(existing_event, event)
     except HTTPNotFound:
         existing_event = event
+
+    if request.app["config"].log_events:
+        LOG.info(event.to_primitive())
     await request.app["db"].event.update_by_id(event.id, existing_event, insert)
     return existing_event
 

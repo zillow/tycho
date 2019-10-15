@@ -1,5 +1,5 @@
 from schematics.models import Model
-from schematics.types import StringType, IntType
+from schematics.types import StringType, IntType, BooleanType
 from schematics.types.compound import ModelType
 
 
@@ -18,3 +18,6 @@ class Config(Model):
     environment = StringType(required=False)
     mongo = ModelType(Mongo, required=True)
     application = ModelType(application, required=True)
+    # a configuration parameter to define whether events should be
+    # logged any time an event is added/updated
+    log_events = BooleanType(required=False, default=True)
