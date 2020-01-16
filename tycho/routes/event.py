@@ -141,7 +141,7 @@ async def put_event(request, event: Event) -> Event:
     """
     await request.app["db"].event.save(event)
     if request.app["config"].log_events:
-        LOG.info(event.to_primitive())
+        LOG.info(json.dumps(event.to_primitive()))
     return event
 
 
@@ -187,7 +187,7 @@ async def post_event(request, event: Event,
         existing_event = event
 
     if request.app["config"].log_events:
-        LOG.info(event.to_primitive())
+        LOG.info(json.dumps(event.to_primitive()))
     await request.app["db"].event.update_by_id(event.id, existing_event, insert)
     return existing_event
 
