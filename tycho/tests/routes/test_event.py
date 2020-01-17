@@ -245,7 +245,7 @@ async def test_put_event(db, event, cli, log, app):
         assert (retrieved_event.to_primitive()
                 == retrieved_event2.to_primitive())
         if log:
-            mock_log.info.assert_called_with(event.to_primitive())
+            mock_log.info.assert_called_with(json.dumps(event.to_primitive()))
         else:
             assert mock_log.assert_not_called
 
@@ -333,7 +333,7 @@ async def test_post_event_merge(event, cli, app, log):
                 == event.to_primitive())
         assert resp.status == 200
         if log:
-            mock_log.info.assert_called_with(event.to_primitive())
+            mock_log.info.assert_called_with(json.dumps(event.to_primitive()))
         else:
             assert mock_log.assert_not_called
 
