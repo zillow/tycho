@@ -9,5 +9,4 @@ RUN npm install -g gulp
 RUN echo "1" > VERSION
 RUN rm -r .git
 RUN python uranium
-RUN python uranium prep_app
 CMD ["python", "/app/bin/gunicorn", "main:app", "-c", "gunicorn_config.py"]
