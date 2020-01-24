@@ -1,9 +1,13 @@
 import pytest
 import attr
+
 from aiohttp.web import HTTPNotFound
-from datetime import datetime, timedelta
-from tycho.models.event import Event
+from asynctest import CoroutineMock, patch
 from copy import deepcopy
+from datetime import datetime, timedelta
+from pymongo.errors import DuplicateKeyError
+from transmute_core import APIException
+from tycho.models.event import Event
 from tycho.db.event import MAX_RECURSIVE_DEPTH
 
 
@@ -94,6 +98,32 @@ async def test_update_by_id_on_nothing(app, event):
     await app["db"].event.update_by_id(event.id, event)
     with pytest.raises(HTTPNotFound):
         result = await app["db"].event.find_by_id(event.id)
+
+
+async def test_update_by_id_pymongo_raises_duplicate_key_error_successful_on_retry(app, event):
+    with patch.object(app["db"].event.collection, "replace_one", new=CoroutineMock()) as mock_replace:
+        mock_replace.side_effect = [DuplicateKeyError("error_msg"), 1]
+
+        await app["db"].event.update_by_id(event.id, event)
+
+
+async def test_update_by_id_pymongo_raises_duplicate_key_error_failure_on_retry(app, event):
+    with patch.object(app["db"].event.collection, "replace_one", new=CoroutineMock()) as mock_replace:
+        mock_replace.side_effect = DuplicateKeyError("error_msg")
+
+        with pytest.raises(APIException,
+                           match=f"Failed to update event data for event_id {event.id}"
+                                 f" due to DuplicateKeyError: error_msg"):
+            await app["db"].event.update_by_id(event.id, event)
+
+
+async def test_update_by_id_pymongo_raises_exception(app, event):
+    with patch.object(app["db"].event.collection, "replace_one", new=CoroutineMock()) as mock_replace:
+        mock_replace.side_effect = Exception("error_msg")
+
+        with pytest.raises(APIException,
+                           match=f"Failed to update event data for event_id {event.id}: error_msg"):
+            await app["db"].event.update_by_id(event.id, event)
 
 
 async def test_find_by_parent_id(app, event):
