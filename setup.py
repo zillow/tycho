@@ -26,7 +26,6 @@ setup(name='tycho',
           'motor',
           'pymongo',
           'orbital-core',
-          "asynctest",
       ],
       entry_points={
           'console_scripts': [

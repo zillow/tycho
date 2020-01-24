@@ -2,7 +2,10 @@ import subprocess
 from uranium import current_build
 
 current_build.config.set_defaults({
-    "module": "tycho"
+    "module": "tycho",
+    "test_packages": {
+        "asynctest": None,
+    },
 })
 
 current_build.packages.install("orbital-core")
