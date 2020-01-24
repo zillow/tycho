@@ -51,21 +51,16 @@ class Event:
         new_data = serialize_to_db_event(update_doc)
 
         retries = 1
-        err_msg = None
         while retries >= 0:
             try:
                 result = await self.collection.replace_one(
                     {"_id": id}, new_data, upsert=insert)
                 return result
-            except DuplicateKeyError as err:
-                err_msg = err
-                retries -= 1
+            except DuplicateKeyError:
                 await asyncio.sleep(WAIT_TIME_S)
-            except Exception as e:
-                raise APIException(f"Failed to update event data for event_id {id}: {str(e)}")
-
-        raise APIException(
-            f"Failed to update event data for event_id {id} due to DuplicateKeyError: {str(err_msg)}")
+                retries -= 1
+                if retries < 0:
+                    raise
 
     async def find_by_parent_id(self, id):
         cursor = self.collection.find({"tags":
