@@ -14,7 +14,7 @@ from .serialize import serialize_to_db_event
 
 
 MAX_RECURSIVE_DEPTH = 100
-WAIT_TIME_S = 1
+WAIT_TIME_SECONDS = 1
 
 
 class Event:
@@ -57,7 +57,7 @@ class Event:
                     {"_id": id}, new_data, upsert=insert)
                 return result
             except DuplicateKeyError:
-                await asyncio.sleep(WAIT_TIME_S)
+                await asyncio.sleep(WAIT_TIME_SECONDS)
                 retries -= 1
                 if retries < 0:
                     raise
