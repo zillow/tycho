@@ -4,7 +4,6 @@ import queue as q
 
 from pymongo.errors import DuplicateKeyError
 from aiohttp.web import HTTPNotFound
-from transmute_core import APIException
 
 from ..utils import async_generator
 from ...models.eventnode import EventNode

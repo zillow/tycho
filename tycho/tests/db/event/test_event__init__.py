@@ -6,7 +6,6 @@ from asynctest import CoroutineMock, patch
 from copy import deepcopy
 from datetime import datetime, timedelta
 from pymongo.errors import DuplicateKeyError
-from transmute_core import APIException
 from tycho.models.event import Event
 from tycho.db.event import MAX_RECURSIVE_DEPTH
 
