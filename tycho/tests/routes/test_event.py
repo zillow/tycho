@@ -293,7 +293,7 @@ async def test_post_invalid_event_raises_bad_request(event, cli):
 async def test_put_invalid_event_raises_exception(cli):
     resp = await cli.put('/api/v1/event/',
                          headers={"content-type": "application/json"},
-                         data=json.dumps({"event": {"bad_key": "hello"}})
+                         data=json.dumps({"event": {"start_time": "hello"}})
                          )
     assert resp.status == 400
 
@@ -302,7 +302,7 @@ async def test_post_invalid_event_raises_bad_reqeuest(event, cli):
     resp = await cli.post('/api/v1/event/',
                           headers={"content-type": "application/json"},
                           data=json.dumps({"operation": "merge",
-                                           "event": {"bad_key": "hello"}})
+                                           "event": {"start_time": "hello"}})
                           )
     assert resp.status == 400
 

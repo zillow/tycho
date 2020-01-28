@@ -1,37 +1,47 @@
+import os
+import shutil
 import subprocess
-from uranium import current_build
+from uranium import current_build, task_requires
 
-current_build.config.set_defaults({
-    "module": "tycho",
-    "test_packages": {
-        "asynctest": None,
-    },
-})
+current_build.packages.install("uranium-plus[vscode]")
+import uranium_plus
 
-current_build.packages.install("orbital-core")
-from orbital_core.build import bootstrap_build
-bootstrap_build(current_build)
+current_build.config.update(
+    {
+        "uranium-plus": {
+            "module": "tycho",
+            "test": {
+                "packages": ["pytest-aiohttp", "pytest-xdist", "gunicorn", "asynctest"]
+            },
+        }
+    }
+)
+
+uranium_plus.bootstrap(current_build)
 
 
-@build.task
+@current_build.task
 def build_statics(build):
-    build.executables.run(["npm", "install", "."])
+    build.executables.run(["npm", "install", build.root])
     build.executables.run(["gulp", "build"])
 
 
-build.tasks.append("main", "build_statics")
+# current_build.tasks.append("main", "build_statics")
 
 
-@build.task
+@current_build.task
 def start_db(build):
     stop_db(build)
-    build.executables.run(["/bin/bash", "-c", (
-        "docker run -p 27017:27017 --name tycho-db"
-        " -d mongo"
-    )])
+    build.executables.run(
+        [
+            "/bin/bash",
+            "-c",
+            ("docker run -p 27017:27017 --name tycho-db" " -d mongo"),
+        ]
+    )
 
 
-@build.task
+@current_build.task
 def stop_db(build):
     # using subprocess.call as we don't want to
     # error out if the container is not running.
@@ -39,10 +49,27 @@ def stop_db(build):
     subprocess.call(["/bin/bash", "-c", "docker rm tycho-db"])
 
 
-build.tasks.prepend("test", "start_db")
-build.tasks.append("test", "stop_db")
+current_build.tasks.prepend("test", "start_db")
+current_build.tasks.append("test", "stop_db")
 
 
-def prep_app(build):
-    """ prep to be run as an app. """
-    build.packages.install("gunicorn")
+@current_build.task
+@task_requires("build_docs")
+def copy_docs(build):
+    """ copy documentation into the application directory. This allows
+    the docs to be packaged with the app itself.
+    """
+    doc_dir = os.path.join(
+        build.root, build.config["uranium-plus"]["module"], "docs"
+    )
+    if os.path.exists(doc_dir):
+        shutil.rmtree(doc_dir)
+    shutil.copytree(
+        os.path.join(build.sandbox_root, "build", "docs"),
+        os.path.join(
+            build.root, build.config["uranium-plus"]["module"], "docs"
+        ),
+    )
+
+
+current_build.tasks.append("main", "copy_docs")
