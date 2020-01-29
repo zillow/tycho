@@ -1,6 +1,7 @@
 import asyncio
 import pymongo
 import queue as q
+import random
 
 from pymongo.errors import DuplicateKeyError
 from aiohttp.web import HTTPNotFound
@@ -13,7 +14,7 @@ from .serialize import serialize_to_db_event
 
 
 MAX_RECURSIVE_DEPTH = 100
-WAIT_TIME_SECONDS = 1
+MAX_WAIT_TIME_SECONDS = 5
 
 
 class Event:
@@ -52,11 +53,11 @@ class Event:
         retries = 1
         while retries >= 0:
             try:
-                result = await self.collection.replace_one(
+                result = await self.collection.find_one_and_replace(
                     {"_id": id}, new_data, upsert=insert)
                 return result
             except DuplicateKeyError:
-                await asyncio.sleep(WAIT_TIME_SECONDS)
+                await asyncio.sleep(random.randint(1, MAX_WAIT_TIME_SECONDS))
                 retries -= 1
                 if retries < 0:
                     raise

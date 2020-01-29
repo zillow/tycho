@@ -100,14 +100,16 @@ async def test_update_by_id_on_nothing(app, event):
 
 
 async def test_update_by_id_pymongo_raises_duplicate_key_error_successful_on_retry(app, event):
-    with patch.object(app["db"].event.collection, "replace_one", new=CoroutineMock()) as mock_replace:
+    with patch.object(app["db"].event.collection, "find_one_and_replace", new=CoroutineMock())\
+            as mock_replace:
         mock_replace.side_effect = [DuplicateKeyError("error_msg"), 1]
 
         await app["db"].event.update_by_id(event.id, event)
 
 
 async def test_update_by_id_pymongo_raises_duplicate_key_error_failure_on_retry(app, event):
-    with patch.object(app["db"].event.collection, "replace_one", new=CoroutineMock()) as mock_replace:
+    with patch.object(app["db"].event.collection, "find_one_and_replace", new=CoroutineMock())\
+            as mock_replace:
         mock_replace.side_effect = [DuplicateKeyError("error after first run"),
                                     DuplicateKeyError("error after second run")]
 
