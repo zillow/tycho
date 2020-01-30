@@ -10,6 +10,7 @@ current_build.config.update(
     {
         "uranium-plus": {
             "module": "tycho",
+            "publish": {"additional_args": ["--release"]},
             "test": {
                 "packages": ["pytest-aiohttp", "pytest-xdist", "gunicorn", "asynctest"]
             },
