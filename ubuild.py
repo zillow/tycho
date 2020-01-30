@@ -11,7 +11,7 @@ current_build.config.update(
         "uranium-plus": {
             "module": "tycho",
             "test": {
-                "packages": ["pytest-aiohttp", "pytest-xdist", "gunicorn"]
+                "packages": ["pytest-aiohttp", "pytest-xdist", "gunicorn", "asynctest"]
             },
         }
     }

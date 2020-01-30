@@ -1,14 +1,20 @@
+import asyncio
 import pymongo
+import queue as q
+import random
+
+from pymongo.errors import DuplicateKeyError
+from aiohttp.web import HTTPNotFound
+
 from ..utils import async_generator
 from ...models.eventnode import EventNode
 from ...models.event import Event as ModelEvent
-from aiohttp.web import HTTPNotFound
-import queue as q
-
 from .deserialize import deserialize_db_event
 from .serialize import serialize_to_db_event
 
+
 MAX_RECURSIVE_DEPTH = 100
+MAX_WAIT_TIME_SECONDS = 0.5
 
 
 class Event:
@@ -43,9 +49,18 @@ class Event:
 
     async def update_by_id(self, id, update_doc: ModelEvent, insert: bool = False):
         new_data = serialize_to_db_event(update_doc)
-        result = await self.collection.replace_one(
-            {"_id": id}, new_data, upsert=insert)
-        return result
+
+        retries = 1
+        while retries >= 0:
+            try:
+                result = await self.collection.find_one_and_replace(
+                    {"_id": id}, new_data, upsert=insert)
+                return result
+            except DuplicateKeyError:
+                await asyncio.sleep(random.uniform(0.0, MAX_WAIT_TIME_SECONDS))
+                retries -= 1
+                if retries < 0:
+                    raise
 
     async def find_by_parent_id(self, id):
         cursor = self.collection.find({"tags":
