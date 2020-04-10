@@ -3,8 +3,7 @@ import shutil
 import subprocess
 from uranium import current_build, task_requires
 
-# current_build.packages.install("uranium-plus[vscode]")
-current_build.packages.install("../uranium/uranium-plus[vscode]", develop=True)
+current_build.packages.install("uranium-plus[vscode]")
 import uranium_plus
 
 current_build.config.update(
