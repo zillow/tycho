@@ -39,6 +39,7 @@ Contents:
    userguide
    events
    runbook
+   design
 
 
 

@@ -17,7 +17,7 @@ Event Format
 
 An example event looks like this:
 
-.. code-block:: json
+.. code-block:: javascript
 
    {
         // a unique ID for your event. This is user-generated,
@@ -51,28 +51,28 @@ An example event looks like this:
         // tags have no imposed structure, but some common examples are listed
         // below.
         "tags": {
-            # this should be the service or system emitting these events.
-            # it helps when trying to find all the events that service recently
-            # emitted.
+            // this should be the service or system emitting these events.
+            // it helps when trying to find all the events that service recently
+            // emitted.
             "source": ["concrete"],
-            # this is the type of action. multiple sources can perform the same action.
-            # it's important to not tie this to a particular implementation, as
-            # technology changes rapidly and the type provides a way to decouple that.
+            // this is the type of action. multiple sources can perform the same action.
+            // it's important to not tie this to a particular implementation, as
+            // technology changes rapidly and the type provides a way to decouple that.
             "type": ["commit"],
-            # a list of authors who are responsible for the event.
-            # e-mail is a namespace that guarantees uniqueness, and works well
-            # alternatively, some other unique key representing the team would
-            # work well.
+            // a list of authors who are responsible for the event.
+            // e-mail is a namespace that guarantees uniqueness, and works well
+            // alternatively, some other unique key representing the team would
+            // work well.
             "author": ["yusuket@example.com", "saroj@example.com"],
-            # the list of services this event affects.
-            # best practice: only attach this to the event that is actually affecting the service, not
-            # the event that will CAUSE an affecting event.
+            // the list of services this event affects.
+            // best practice: only attach this to the event that is actually affecting the service, not
+            // the event that will CAUSE an affecting event.
             "service": ["tycho"],
-            # pending, fail, success. The event can be updated after the fact,
-            # so this can represent some transient state as well.
-            # conversely, one could an event after a state change as a separate event.
+            // pending, fail, success. The event can be updated after the fact,
+            // so this can represent some transient state as well.
+            // conversely, one could an event after a state change as a separate event.
             "status": ["success"],
-            # a bug or ticket number. Having a ticket with work-in-action helps with additional context.
-            "bug_number": ["MON-1234"],
+            // a bug or ticket number. Having a ticket with work-in-action helps with additional context.
+            "bug_number": ["MON-1234"]
         }
     }
