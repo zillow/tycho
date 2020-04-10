@@ -34,11 +34,7 @@ def build_statics(build):
 def start_db(build):
     stop_db(build)
     build.executables.run(
-        [
-            "/bin/bash",
-            "-c",
-            ("docker run -p 27017:27017 --name tycho-db" " -d mongo"),
-        ]
+        ["/bin/bash", "-c", ("docker run -p 27017:27017 --name tycho-db" " -d mongo"),]
     )
 
 
@@ -60,16 +56,12 @@ def copy_docs(build):
     """ copy documentation into the application directory. This allows
     the docs to be packaged with the app itself.
     """
-    doc_dir = os.path.join(
-        build.root, build.config["uranium-plus"]["module"], "docs"
-    )
+    doc_dir = os.path.join(build.root, build.config["uranium-plus"]["module"], "docs")
     if os.path.exists(doc_dir):
         shutil.rmtree(doc_dir)
     shutil.copytree(
         os.path.join(build.sandbox_root, "build", "docs"),
-        os.path.join(
-            build.root, build.config["uranium-plus"]["module"], "docs"
-        ),
+        os.path.join(build.root, build.config["uranium-plus"]["module"], "docs"),
     )
 
 

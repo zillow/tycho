@@ -18,12 +18,25 @@ MAX_WAIT_TIME_SECONDS = 0.5
 
 
 class Event:
-    _collection = 'event'
+    """
+    Tycho stores events in a MongoDB database, with indices against tags, time created, and update time.
+
+    The cardinality of the keys is not a concern, as regardless of the key value, the
+    index will include the raw value. To ensure that the keys and values themselves are
+    not too large (which would impact record size), there is a 100 character limit.
+
+    Queries that span both a key:value with a larger number of records, and a long time
+    frame, will result in a scanning query, as MongoDB cannot build a compound index
+    that includes both the tags and the update time. As such it is best to restrict time
+    ranges to as short of a range as possible, and filter to a specific tag.
+    """
+
+    _collection = "event"
 
     indexes = [
-        {'unique': False, 'keys': [("tags", pymongo.ASCENDING)]},
-        {'unique': False, 'keys': [("time", pymongo.ASCENDING)]},
-        {'unique': False, 'keys': [("update_time", pymongo.ASCENDING)]}
+        {"unique": False, "keys": [("tags", pymongo.ASCENDING)]},
+        {"unique": False, "keys": [("time", pymongo.ASCENDING)]},
+        {"unique": False, "keys": [("update_time", pymongo.ASCENDING)]},
     ]
 
     def __init__(self, collection):
@@ -41,7 +54,7 @@ class Event:
     async def find_by_id(self, id) -> ModelEvent:
         document = None
         cursor = self.collection.find({"_id": id})
-        while(await cursor.fetch_next):
+        while await cursor.fetch_next:
             document = cursor.next_object()
         if document is None:
             raise HTTPNotFound(text="cannot find event {0}".format(id))
@@ -54,7 +67,8 @@ class Event:
         while retries >= 0:
             try:
                 result = await self.collection.find_one_and_replace(
-                    {"_id": id}, new_data, upsert=insert)
+                    {"_id": id}, new_data, upsert=insert
+                )
                 return result
             except DuplicateKeyError:
                 await asyncio.sleep(random.uniform(0.0, MAX_WAIT_TIME_SECONDS))
@@ -63,18 +77,17 @@ class Event:
                     raise
 
     async def find_by_parent_id(self, id):
-        cursor = self.collection.find({"tags":
-                                       {"$in": ["parent_id:{0}".format(id)]}})
+        cursor = self.collection.find({"tags": {"$in": ["parent_id:{0}".format(id)]}})
         return async_generator(cursor, deserialize_db_event)
 
-    async def find(self, tags=None, frm=None, to=None, use_update_time=False,
-                   count=100, page=1):
+    async def find(
+        self, tags=None, frm=None, to=None, use_update_time=False, count=100, page=1
+    ):
         if count < 0:
             raise ValueError("Count must be greater than or equal to zero.")
 
         if page < 1:
-            raise ValueError(
-                "Page count must be greater than or equal to one.")
+            raise ValueError("Page count must be greater than or equal to one.")
 
         time_field = "update_time" if use_update_time else "time"
 
@@ -85,12 +98,7 @@ class Event:
         # optimize common use case
         # https://docs.mongodb.com/manual/core/multikey-index-bounds/
         if frm and to and not use_update_time:
-            query[time_field] = {
-                "$elemMatch": {
-                    "$gte": frm,
-                    "$lt": to,
-                }
-            }
+            query[time_field] = {"$elemMatch": {"$gte": frm, "$lt": to,}}
         else:
             if frm is not None:
                 query[time_field] = {"$gte": frm}
@@ -100,8 +108,12 @@ class Event:
                 else:
                     query[time_field]["$lt"] = to
 
-        cursor = self.collection.find(query).sort([(time_field, -1)]).skip(
-            (page-1)*count).limit(count)
+        cursor = (
+            self.collection.find(query)
+            .sort([(time_field, -1)])
+            .skip((page - 1) * count)
+            .limit(count)
+        )
         return async_generator(cursor, deserialize_db_event)
 
     async def get_tree(self, id):
@@ -109,7 +121,7 @@ class Event:
         root_event_node = EventNode(event=root_event)
         queue = q.Queue()
         queue.put(root_event_node)
-        while (not queue.empty()):
+        while not queue.empty():
             event_node = queue.get()
             children = await self.find_by_parent_id(event_node.event.id)
             async for child in children:
