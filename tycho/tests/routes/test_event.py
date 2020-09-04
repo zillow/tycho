@@ -260,7 +260,7 @@ async def test_put_event_with_error(db, event, cli, app):
                              data=json.dumps({"event": event.to_primitive()}))
         assert resp.status == 400
         retrieved_event_json = (await resp.json())
-        assert "Failed to add event. Error says:" in retrieved_event_json["result"]
+        assert "Error: id '5498d53c5f2d60095267a0bb' already exists" == retrieved_event_json["result"]
 
 
 async def test_put_invalid_event_raises_exception(cli):

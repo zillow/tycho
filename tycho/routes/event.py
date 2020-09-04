@@ -142,10 +142,10 @@ async def put_event(request, event: Event) -> Event:
     """
     try:
         await request.app["db"].event.save(event)
-        if request.app["config"].log_events:
-            LOG.info(json.dumps(event.to_primitive()))
-    except DuplicateKeyError as err:
-        raise APIException(message=f"Failed to add event. Error says: {err}")
+    except DuplicateKeyError:
+        raise APIException(message=f"Error: id '{event.id}' already exists")
+    if request.app["config"].log_events:
+        LOG.info(json.dumps(event.to_primitive()))
     return event
 
 
