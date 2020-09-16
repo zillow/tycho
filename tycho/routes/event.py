@@ -3,6 +3,7 @@ import attr
 import json
 import os
 import logging
+from pymongo.errors import DuplicateKeyError
 from aiohttp import web
 from aiohttp.web import HTTPNotFound
 from aiohttp_transmute import (APIException, add_route, route)
@@ -139,7 +140,10 @@ async def put_event(request, event: Event) -> Event:
     :param event: the event to be stored
     :return: the stored event
     """
-    await request.app["db"].event.save(event)
+    try:
+        await request.app["db"].event.save(event)
+    except DuplicateKeyError:
+        raise APIException(message=f"Error: id '{event.id}' already exists")
     if request.app["config"].log_events:
         LOG.info(json.dumps(event.to_primitive()))
     return event

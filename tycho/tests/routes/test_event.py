@@ -250,6 +250,19 @@ async def test_put_event(db, event, cli, log, app):
             assert mock_log.assert_not_called
 
 
+async def test_put_event_with_error(db, event, cli, app):
+    with patch("tycho.routes.event.LOG") as mock_log:
+        app["config"].log_events = False
+        event_resp = await cli.put(f'/api/v1/event/', headers={"content-type": "application/json"},
+                                   data=json.dumps({"event": event.to_primitive()}))
+        assert event_resp.status == 200
+        resp = await cli.put(f'/api/v1/event/', headers={"content-type": "application/json"},
+                             data=json.dumps({"event": event.to_primitive()}))
+        assert resp.status == 400
+        retrieved_event_json = (await resp.json())
+        assert "Error: id '5498d53c5f2d60095267a0bb' already exists" == retrieved_event_json["result"]
+
+
 async def test_put_invalid_event_raises_exception(cli):
     event_json = {'source_id': """
 {
