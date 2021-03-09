@@ -112,3 +112,11 @@ def test_deserialize_db_event_detail_urls_exist():
 
 def test_deserialize_db_event_all_fields(event, eventdb):
     assert deserialize_db_event(eventdb.asdict()) == event
+
+
+def test_deserialize_db_event_with_dot_converter_in_detail_urls_key(eventdb):
+    event_db_dict = attr.asdict(eventdb)
+    event_db_dict["detail_urls"] = {"foo~dot~bar": "abcd"}
+    event = deserialize_db_event(event_db_dict)
+    assert event
+    assert event.detail_urls == {"foo.bar": "abcd"}

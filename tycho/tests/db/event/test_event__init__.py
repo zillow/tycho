@@ -16,6 +16,13 @@ async def test_save_data(app, event):
     assert attr.asdict(result) == attr.asdict(event)
 
 
+async def test_save_data_with_dot_in_detail_urls_key(app, event):
+    event.detail_urls["foo.bar"] = "abcd"
+    await app["db"].event.save(event)
+    result = await app["db"].event.find_one()
+    assert attr.asdict(result) == attr.asdict(event)
+
+
 async def test_find_one_data_exists(app, event):
     await app["db"].event.save(event)
     result = await app["db"].event.find_one()

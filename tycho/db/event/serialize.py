@@ -1,6 +1,7 @@
 from datetime import datetime
-from ...models.event import Event
 from typing import Dict, List
+
+from ...models.event import Event, DOT_CONVERTER, DOT_CONSTANT
 
 
 def serialize_to_db_event(event: Event) -> Dict:
@@ -30,9 +31,14 @@ def serialize_to_db_event(event: Event) -> Dict:
         if getattr(event, key) is not None:
             new_event["time"].append(getattr(event, key))
 
-    for key in ["detail_urls", "description"]:
-        if getattr(event, key) is not None:
-            new_event[key] = getattr(event, key)
+    if getattr(event, "description") is not None:
+        new_event["description"] = event.description
+
+    if getattr(event, "detail_urls") is not None:
+        new_event["detail_urls"] = {}
+        for key, value in event.detail_urls.items():
+            key = key.replace(DOT_CONSTANT, DOT_CONVERTER)
+            new_event["detail_urls"][key] = value
 
     new_event["update_time"] = datetime.utcnow()
 

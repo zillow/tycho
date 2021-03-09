@@ -8,6 +8,8 @@ from transmute_core.object_serializers.cattrs_serializer import create_cattrs_co
 
 
 CATTRS_CONVERTER = create_cattrs_converter()
+DOT_CONVERTER = "~dot~"
+DOT_CONSTANT = "."
 
 
 def ensure_value_is_not_empty(instance, attribute, value):
