@@ -34,9 +34,9 @@ def test_serialize_to_db_event_empty_event(patch_update_time, update_time):
 
 
 def test_serialize_to_db_event_no_tag_field(patch_update_time, update_time):
-    event_db_dict = serialize_to_db_event(Event(detail_urls="http://xyz"))
+    event_db_dict = serialize_to_db_event(Event(detail_urls={"key": "http://xyz"}))
     assert event_db_dict["tags"] == []
-    assert event_db_dict["detail_urls"] == "http://xyz"
+    assert event_db_dict["detail_urls"] == {"key": "http://xyz"}
     assert event_db_dict["update_time"] == update_time
 
 
@@ -84,8 +84,8 @@ def test_serialize_to_db_time_both_times(patch_update_time, update_time):
 
 
 def test_serialize_to_db_detail_urls_exist(patch_update_time, update_time):
-    event_db_dict = serialize_to_db_event(Event(detail_urls={"http://url"}))
-    assert event_db_dict["detail_urls"] == {"http://url"}
+    event_db_dict = serialize_to_db_event(Event(detail_urls={"key": "http://url"}))
+    assert event_db_dict["detail_urls"] == {"key": "http://url"}
     assert event_db_dict["update_time"] == update_time
 
 
@@ -98,3 +98,9 @@ def test_serialize_to_db_event_all_fields(app, event, eventdb, patch_update_time
     result["tags"] = sorted(result["tags"])
     eventdb.tags = sorted(eventdb.tags)
     assert result == eventdb.asdict()
+
+
+def test_serialize_to_db_event_with_dot_in_detail_urls_key(event):
+    event.detail_urls["foo.bar"] = "abcd"
+    result = serialize_to_db_event(event)
+    assert result["detail_urls"]["foo~dot~bar"] == "abcd"

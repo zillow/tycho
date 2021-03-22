@@ -1,7 +1,6 @@
-from ...models.eventdb import EventDB
-from ...models.event import Event
 from typing import Dict, List
 
+from ...models.event import Event, DOT_CONSTANT, DOT_CONVERTER
 
 _reserved_fields_in_eventdb_tag = {
     "source_id", "parent_id"
@@ -26,7 +25,10 @@ def deserialize_db_event(eventdb: Dict) -> Event:
             new_event["id"] = str(eventdb["_id"])
 
         if "detail_urls" in eventdb:
-            new_event["detail_urls"] = eventdb["detail_urls"]
+            new_event["detail_urls"] = {}
+            for key, value in eventdb["detail_urls"].items():
+                key = key.replace(DOT_CONVERTER, DOT_CONSTANT)
+                new_event["detail_urls"][key] = value
 
         if "description" in eventdb:
             new_event["description"] = eventdb["description"]
