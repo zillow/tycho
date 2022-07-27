@@ -6,6 +6,8 @@ from schematics.types.compound import ModelType
 class Mongo(Model):
     uri = StringType(required=True)
     db_name = StringType(required=True)
+    username = StringType(required=False)
+    password = StringType(required=False)
 
 
 class application(Model):
