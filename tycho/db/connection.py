@@ -21,19 +21,12 @@ def get_db(db_config):
     """
     creates connection with dabatase and gets db object to connect.
     """
-    # secondarypreferred has proved to be a good practice,
-    # as it enabled minimal contention on the node that should
-    # be critical and handle writes. Oftentimes delay of event
-    # propagation is in the milliseconds.
-    connection_config = {
-        "host": db_config.uri,
-        "readPreference": "secondaryPreferred",
-    }
-    if db_config.username:
-        connection_config["username"] = db_config.username
-    if db_config.password:
-        connection_config["password"] = db_config.password
-    connection = motor.motor_asyncio.AsyncIOMotorClient(**connection_config)
+    connection = motor.motor_asyncio.AsyncIOMotorClient(
+        host=db_config.uri,
+        readPreference=db_config.read_preference,
+        username=db_config.username,
+        password=db_config.password,
+    )
     db = connection[db_config.db_name]
     return db
 
