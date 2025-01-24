@@ -5,7 +5,7 @@ from tycho.models.eventdb import EventDB
 from schematics.contrib.mongo import ObjectIdType
 from schematics.exceptions import DataError
 from schematics.models import Model
-
+from cattrs.errors import ClassValidationError
 from tycho.models.event import CATTRS_CONVERTER
 
 
@@ -42,14 +42,14 @@ def test_eventdb_no_field_present():
     doc = {}
     # when no illegal value present.
     # below initialization won't raise exception.
-    with pytest.raises(TypeError):
+    with pytest.raises(ClassValidationError):
         CATTRS_CONVERTER.structure(doc, EventDB)
 
 
 def test_eventdb_required_fields_not_present():
     doc = {"detail_urls": {"graphite": "http://graphite",
                            "concrete": "http://concrete"}}
-    with pytest.raises(TypeError):
+    with pytest.raises(ClassValidationError):
         CATTRS_CONVERTER.structure(doc, EventDB)
 
 

@@ -51,7 +51,7 @@ def db(loop, config):
     asyncio.set_event_loop(loop)
     _db = init_db(config.mongo)
     yield _db
-    if _db:
+    if _db is not None:
         loop.run_until_complete(_db.command("dropDatabase"))
 
 

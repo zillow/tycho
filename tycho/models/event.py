@@ -17,30 +17,29 @@ def ensure_value_is_not_empty(instance, attribute, value):
         raise ValueError("Values must not be none or empty")
     return value
 
-
-def ensure_maxlength_100_chars_and_tags_key_val_not_none(instance, attribute, value):
-    """
-    A helper function to ensure that the values for
-    the reserved kays are less than a hundred character limit
-    and that the tags do not have any none keys or vals
-    """
-    if isinstance(value, str):
-        if len(value) > 100:
-            raise ValueError("Values must not "
-                             "exceed length of 100 chars")
-    elif isinstance(value, dict):
-        for key in value:
-            if key is None or key == "None":
-                raise ValueError("Tags keys can't be None")
-            if value.get(key) is None:
-                raise ValueError("Tags values can't be None")
-            for elem in value[key]:
-                if elem is None:
+def field_validator(max_length):
+    def ensure_maxlength_chars_and_tags_key_val_not_none(instance, attribute, value):
+        """
+        A helper function to ensure that the values for
+        the reserved kays are less than a hundred character limit
+        and that the tags do not have any none keys or vals
+        """
+        if isinstance(value, str):
+            if len(value) > max_length:
+                raise ValueError(f"Value of attrribute {attribute} must not exceed length of {max_length} chars")
+        elif isinstance(value, dict):
+            for key in value:
+                if key is None or key == "None":
+                    raise ValueError("Tags keys can't be None")
+                if value.get(key) is None:
                     raise ValueError("Tags values can't be None")
-                if len(elem) > 100:
-                    raise ValueError("Values must not "
-                                     "exceed length of 100 chars")
-    return value
+                for elem in value[key]:
+                    if elem is None:
+                        raise ValueError("Tags values can't be None")
+                    if len(elem) > max_length:
+                        raise ValueError(f"Value of attrribute {attribute} must not exceed length of {max_length} chars")
+        return value
+    return ensure_maxlength_chars_and_tags_key_val_not_none
 
 
 def ensure_value_is_not_none(instance, attribute, value):
@@ -99,11 +98,11 @@ class Event(object):
     # reserved keys
     # assign uuid as id for event if not provided
     id = attr.ib(type=str, default=attr.Factory(lambda: str(uuid4())),
-                 validator=[ensure_value_is_not_empty, ensure_maxlength_100_chars_and_tags_key_val_not_none])
+                 validator=[ensure_value_is_not_empty, field_validator(100)])
     source_id = attr.ib(type=str, default="",
-                        validator=[ensure_maxlength_100_chars_and_tags_key_val_not_none])
+                        validator=[field_validator(100)])
     parent_id = attr.ib(type=str, default="",
-                        validator=[ensure_maxlength_100_chars_and_tags_key_val_not_none])
+                        validator=[field_validator(100)])
     start_time = attr.ib(type=datetime, default=attr.Factory(datetime.utcnow),
                          converter=ignore_microseconds, validator=[ensure_value_is_not_none])
     end_time = attr.ib(type=datetime, default=attr.Factory(datetime.utcnow),
@@ -111,7 +110,7 @@ class Event(object):
     description = attr.ib(type=str, default="")
     detail_urls = attr.ib(type=Dict[str, str], default=attr.Factory(dict))
     tags = attr.ib(type=Dict[str, List[str]], default=attr.Factory(dict),
-                   validator=[ensure_maxlength_100_chars_and_tags_key_val_not_none])
+                   validator=[field_validator(200)])
 
     @staticmethod
     def from_dict(d):
