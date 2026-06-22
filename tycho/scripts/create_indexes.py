@@ -20,7 +20,7 @@ async def create_indexes(app):
     # pymongo/motor returns collection object if any property is missing
     # hence explicitly checking its type as list
     if not isinstance(app['db'].event.indexes, list):
-        LOGGER.warn("Collection {0} on {1} has no attribute 'indexes'".format(
+        LOGGER.warning("Collection {0} on {1} has no attribute 'indexes'".format(
             'event', app.async_db.name))
         # not throwing exception here but continue to run script with other
         # valid collections
@@ -37,7 +37,7 @@ async def create_indexes(app):
                                              unique=index['unique'])
         except pymongo.errors.OperationFailure as e:
             LOGGER.exception(
-                "Error occured while creating the index {0} on collection {1}".format(
+                "Error occurred while creating the index {0} on collection {1}".format(
                     index, 'event')
             )
 
