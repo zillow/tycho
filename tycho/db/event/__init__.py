@@ -132,7 +132,7 @@ class Event:
         return root_event_node
 
     async def trace(self, event_id):
-        """ return back the root-level parent id of the event """
+        """ return the root-level parent id of the event """
         result = []
 
         currId = event_id

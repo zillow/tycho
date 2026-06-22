@@ -19,7 +19,7 @@ def init_db(db_config):
 
 def get_db(db_config):
     """
-    creates connection with dabatase and gets db object to connect.
+    creates connection with database and gets db object to connect.
     """
     connection = motor.motor_asyncio.AsyncIOMotorClient(
         host=db_config.uri,
